@@ -12,6 +12,7 @@ type DHTNode struct {
 	contact     Contact
 }
 
+/*** CREATE ***/
 func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 	dhtNode := new(DHTNode)
 	dhtNode.contact.ip = ip
@@ -24,11 +25,19 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 		dhtNode.nodeId = *nodeId
 	}
 
-	dhtNode.successor = nil
+	dhtNode.successor = dhtNode
 	dhtNode.predecessor = nil
 
 	return dhtNode
 }
+
+/**** ADD SPECIAL CASE FOR ONLY ONE NODE ****/
+func (dhtNode *DHTNode) join(node *DHTNode){
+	predecessor = nil
+	successor = node.findSuccessor(dhtNode)
+}
+
+
 
 func (dhtNode *DHTNode) findSuccessor(node *DHTNode){
 	predNode := findPredecessor(node)
@@ -37,8 +46,10 @@ func (dhtNode *DHTNode) findSuccessor(node *DHTNode){
 
 func (dhtNode *DHTNode) findPredecessor(node *DHTNode){
 	succsNode := dhtNode
-	while (node
+	return succsNode
 }
+
+
 
 func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 	// TODO
