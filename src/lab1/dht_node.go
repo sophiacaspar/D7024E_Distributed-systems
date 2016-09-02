@@ -31,28 +31,39 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 	return dhtNode
 }
 
-/**** ADD SPECIAL CASE FOR ONLY ONE NODE ****/
-func (dhtNode *DHTNode) join(node *DHTNode){
-	predecessor = nil
-	successor = node.findSuccessor(dhtNode)
+
+func (dhtNode *DHTNode) findPredecessor(node *DHTNode) *DHTNode{
+        succsNode := dhtNode
+        return succsNode
 }
 
 
-
-func (dhtNode *DHTNode) findSuccessor(node *DHTNode){
-	predNode := findPredecessor(node)
+func (dhtNode *DHTNode) findSuccessor(node *DHTNode) *DHTNode{
+	predNode := dhtNode.findPredecessor(node)
 	return predNode.successor
 }
 
-func (dhtNode *DHTNode) findPredecessor(node *DHTNode){
-	succsNode := dhtNode
-	return succsNode
+
+// JOIN
+func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
+	dhtNode.predecessor = nil
+        dhtNode.successor = newDHTNode.findSuccessor(dhtNode)
 }
 
 
+// periodically verify nodes immediate successor and tell the successor about node
+func (dhtNode *DHTNode) stabilize(){
+	n := dhtNode.successor.predecessor
+	if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor.nodeId), []byte(n.nodeId))){
+		dhtNode.successor = n
+	}
+	dhtNode.successor.notify(dhtNode)
+}
 
-func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
-	// TODO
+func (dhtNode *DHTNode) notify(node *DHTNode){
+	if ((dhtNode.predecessor == nil) || between([]byte (dhtNode.predecessor.nodeId), []byte (dhtNode.nodeId), []byte (node.nodeId))){
+		dhtNode.predecessor = node
+	}
 }
 
 func (dhtNode *DHTNode) lookup(key string) *DHTNode {

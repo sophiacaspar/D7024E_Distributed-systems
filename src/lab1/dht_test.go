@@ -26,6 +26,8 @@ func TestDHT1(t *testing.T) {
 	node6b := makeDHTNode(&id6, "localhost", "1117")
 	node7b := makeDHTNode(&id7, "localhost", "1118")
 
+	between([]byte("00"),[]byte("02"), []byte("01"))
+
 	node0b.addToRing(node1b)
 	node1b.addToRing(node2b)
 	node1b.addToRing(node3b)
@@ -83,3 +85,5 @@ func TestDHT2(t *testing.T) {
 	nodeForKey3 := node1.lookup(key3)
 	fmt.Println("dht node " + nodeForKey3.nodeId + " running at " + nodeForKey3.contact.ip + ":" + nodeForKey3.contact.port + " is responsible for " + key3)
 }
+
+
