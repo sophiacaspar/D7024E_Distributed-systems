@@ -25,7 +25,7 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 		dhtNode.nodeId = *nodeId
 	}
 
-	dhtNode.successor = dhtNode
+	dhtNode.successor = nil
 	dhtNode.predecessor = nil
 
 	return dhtNode
@@ -46,8 +46,15 @@ func (dhtNode *DHTNode) findSuccessor(node *DHTNode) *DHTNode{
 
 // JOIN
 func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
-	dhtNode.predecessor = nil
-        dhtNode.successor = newDHTNode.findSuccessor(dhtNode)
+	//dhtNode.predecessor = nil
+        //dhtNode.successor = newDHTNode.findSuccessor(dhtNode)
+	if (dhtNode.predecessor == nil && dhtNode.successor == nil) {
+		dhtNode.predecessor = newDHTNode
+		dhtNode.successor = newDHTNode
+		newDHTNode.predecessor = dhtNode
+		newDHTNode.successor = dhtNode
+	} else
+
 }
 
 
