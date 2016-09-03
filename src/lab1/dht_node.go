@@ -48,12 +48,22 @@ func (dhtNode *DHTNode) findSuccessor(node *DHTNode) *DHTNode{
 func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 	//dhtNode.predecessor = nil
         //dhtNode.successor = newDHTNode.findSuccessor(dhtNode)
+	n := dhtNode.successor
 	if (dhtNode.predecessor == nil && dhtNode.successor == nil) {
 		dhtNode.predecessor = newDHTNode
 		dhtNode.successor = newDHTNode
 		newDHTNode.predecessor = dhtNode
 		newDHTNode.successor = dhtNode
-	} else
+	} else if (between([]byte(dhtNode.nodeId), []byte(n.nodeId), []byte(newDHTNode.nodeId))){
+		n.predecessor = newDHTNode
+		newDHTNode.successor = n
+		dhtNode.successor = newDHTNode
+		newDHTNode.predecessor = dhtNode
+		
+	} else {
+		n.addToRing(newDHTNode)
+	}
+
 
 }
 
@@ -74,8 +84,11 @@ func (dhtNode *DHTNode) notify(node *DHTNode){
 }
 
 func (dhtNode *DHTNode) lookup(key string) *DHTNode {
-	// TODO
-	return dhtNode // XXX This is not correct obviously
+	if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor.nodeId), []byte(key))){
+		return dhtNode.successor
+	} else {
+		return dhtNode.successor.lookup(key)
+	}
 }
 
 func (dhtNode *DHTNode) acceleratedLookupUsingFingers(key string) *DHTNode {

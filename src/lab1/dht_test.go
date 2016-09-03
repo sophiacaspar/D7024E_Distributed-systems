@@ -26,8 +26,6 @@ func TestDHT1(t *testing.T) {
 	node6b := makeDHTNode(&id6, "localhost", "1117")
 	node7b := makeDHTNode(&id7, "localhost", "1118")
 
-	between([]byte("00"),[]byte("02"), []byte("01"))
-
 	node0b.addToRing(node1b)
 	node1b.addToRing(node2b)
 	node1b.addToRing(node3b)
@@ -87,3 +85,35 @@ func TestDHT2(t *testing.T) {
 }
 
 
+func TestDHT0(t *testing.T) {
+        id0 := "00"
+        id1 := "01"
+        id2 := "02"
+        id3 := "03"
+        id4 := "04"
+        id5 := "05"
+        id6 := "06"
+        id7 := "07"
+
+        node0 := makeDHTNode(&id0, "localhost", "1111")
+        node1 := makeDHTNode(&id1, "localhost", "1112")
+        node2 := makeDHTNode(&id2, "localhost", "1113")
+        node3 := makeDHTNode(&id3, "localhost", "1114")
+        node4 := makeDHTNode(&id4, "localhost", "1115")
+        node5 := makeDHTNode(&id5, "localhost", "1116")
+        node6 := makeDHTNode(&id6, "localhost", "1117")
+        node7 := makeDHTNode(&id7, "localhost", "1118")
+
+
+	node0.addToRing(node1)
+	node1.addToRing(node2)
+	node1.addToRing(node3)
+	node1.addToRing(node4)
+	node4.addToRing(node5)
+	node3.addToRing(node6)
+	node3.addToRing(node7)
+
+
+	fmt.Println(node4.lookup("02").nodeId)
+
+}
