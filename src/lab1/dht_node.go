@@ -1,5 +1,7 @@
 package dht
 
+import "fmt"
+
 type Contact struct {
 	ip   string
 	port string
@@ -102,7 +104,16 @@ func (dhtNode *DHTNode) responsible(key string) bool {
 }
 
 func (dhtNode *DHTNode) printRing() {
-	// TODO
+	n := dhtNode.successor
+	fmt.Println(dhtNode.nodeId)
+	for i:= n; i != dhtNode; i = i.getNext() {
+		fmt.Println(i.nodeId)
+	}
+
+}
+
+func (dhtNode *DHTNode) getNext() *DHTNode {
+	return dhtNode.successor
 }
 
 func (dhtNode *DHTNode) testCalcFingers(m int, bits int) {

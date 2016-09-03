@@ -114,6 +114,10 @@ func TestDHT0(t *testing.T) {
 	node3.addToRing(node7)
 
 
-	fmt.Println(node4.lookup("02").nodeId)
+	fmt.Println(node6.lookup("04").nodeId)
+	fmt.Println("-> ring structure")
+        node1.printRing()
+	fmt.Println("-> ring structure")
+	node4.printRing()
 
 }
