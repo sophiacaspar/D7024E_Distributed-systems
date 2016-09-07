@@ -58,9 +58,6 @@ func TestDHT2(t *testing.T) {
 	key2 := "87adb987ebbd55db2c5309fd4b23203450ab0083"
 	key3 := "74475501523a71c34f945ae4e87d571c2c57f6f3"
 
-	fmt.Println("TEST: " + node1.lookup(key1).nodeId + " is responsible for " + key1)
-	fmt.Println("TEST: " + node1.lookup(key2).nodeId + " is responsible for " + key2)
-	fmt.Println("TEST: " + node1.lookup(key3).nodeId + " is responsible for " + key3)
 
 	node1.addToRing(node2)
 	node1.addToRing(node3)
@@ -70,6 +67,11 @@ func TestDHT2(t *testing.T) {
 	node3.addToRing(node7)
 	node3.addToRing(node8)
 	node7.addToRing(node9)
+
+	fmt.Println("TEST: " + node1.lookup(key1).nodeId + " is responsible for " + key1)
+	fmt.Println("TEST: " + node1.lookup(key2).nodeId + " is responsible for " + key2)
+	fmt.Println("TEST: " + node1.lookup(key3).nodeId + " is responsible for " + key3)
+
 
 	fmt.Println("-> ring structure")
 	node1.printRing()
@@ -114,12 +116,6 @@ func TestDHT0(t *testing.T) {
 	node3.addToRing(node7)
 
 
-	fmt.Print("03 01 02")
-	fmt.Println(between([]byte("03"), []byte("01"), []byte("02")))	
-
-	fmt.Print("01 03 02")
-        fmt.Println(between([]byte("01"), []byte("03"), []byte("02")))
-
 	fmt.Println("node 3 lookups 04, should be 04")
 	fmt.Println(node3.lookup("04").nodeId)
 	fmt.Println("node 5 lookups 02, should be 03")
@@ -130,8 +126,8 @@ func TestDHT0(t *testing.T) {
         fmt.Println(node3.lookup("01").nodeId)
 
 
-//	fmt.Println("-> ring structure")
-//       node1.printRing()
+	fmt.Println("-> ring structure")
+       	node1.printRing()
 //	fmt.Println("-> ring structure")
 //	node4.printRing()
 

@@ -1,6 +1,9 @@
 package dht
 
-import "fmt"
+import (
+	"fmt"
+	"encoding/hex"
+)
 
 type Contact struct {
 	ip   string
@@ -12,6 +15,7 @@ type DHTNode struct {
 	successor   *DHTNode
 	predecessor *DHTNode
 	contact     Contact
+	fingers 	*Fingers
 }
 
 /*** CREATE ***/
@@ -102,25 +106,20 @@ func (dhtNode *DHTNode) responsible(key string) bool {
 }
 
 func (dhtNode *DHTNode) printRing() {
-	n := dhtNode.successor
 	fmt.Println(dhtNode.nodeId)
-	for i:= n; i != dhtNode; i = i.getNext() {
+	for i:= dhtNode.successor; i != dhtNode; i = i.successor {
 		fmt.Println(i.nodeId)
 	}
-
 }
 
-func (dhtNode *DHTNode) getNext() *DHTNode {
-	return dhtNode.successor
-}
 
 func (dhtNode *DHTNode) testCalcFingers(m int, bits int) {
-	/* idBytes, _ := hex.DecodeString(dhtNode.nodeId)
+	idBytes, _ := hex.DecodeString(dhtNode.nodeId)
 	fingerHex, _ := calcFinger(idBytes, m, bits)
 	fingerSuccessor := dhtNode.lookup(fingerHex)
 	fingerSuccessorBytes, _ := hex.DecodeString(fingerSuccessor.nodeId)
 	fmt.Println("successor    " + fingerSuccessor.nodeId)
 
 	dist := distance(idBytes, fingerSuccessorBytes, bits)
-	fmt.Println("distance     " + dist.String()) */
+	fmt.Println("distance     " + dist.String())
 }
