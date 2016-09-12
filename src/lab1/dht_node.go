@@ -15,7 +15,7 @@ type DHTNode struct {
 	successor   *DHTNode
 	predecessor *DHTNode
 	contact     Contact
-	fingers 	*Fingers
+	finger_table 	*Finger_table
 }
 
 /*** CREATE ***/
@@ -33,6 +33,9 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 
 	dhtNode.successor = nil
 	dhtNode.predecessor = nil
+
+	dhtNode.finger_table = new(Finger_table)
+	dhtNode.finger_table.fingers = [size]*Finger
 
 	return dhtNode
 }
@@ -58,11 +61,20 @@ func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 		dhtNode.successor = newDHTNode
 		newDHTNode.predecessor = dhtNode
 		newDHTNode.successor = dhtNode
+
+		for i:=1; i <= size; i++ {
+			newDHTNode.finger_table.fingers[i] = new(Finger{dhtNode.nodeId})
+			dhtNode.finger_table.fingers[i] = new(Finger{newDHTNode.nodeId})
+
+		}
+
 	} else if (between([]byte(dhtNode.nodeId), []byte(n.nodeId), []byte(newDHTNode.nodeId))){
 		n.predecessor = newDHTNode
 		newDHTNode.successor = n
 		dhtNode.successor = newDHTNode
 		newDHTNode.predecessor = dhtNode
+		init_finger_table(newDHTNode)
+		dhtNode.update_fingers()
 		
 	} else {
 		n.addToRing(newDHTNode)
