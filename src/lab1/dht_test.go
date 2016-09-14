@@ -36,11 +36,12 @@ func TestDHT1(t *testing.T) {
 
 	fmt.Println("-> ring structure")
 	node1b.printRing()
-
+/**
 	node3b.testCalcFingers(0, 3)
 	node3b.testCalcFingers(1, 3)
 	node3b.testCalcFingers(2, 3)
 	node3b.testCalcFingers(3, 3)
+	*/
 }
 
 func TestDHT2(t *testing.T) {
@@ -130,5 +131,7 @@ func TestDHT0(t *testing.T) {
        	node1.printRing()
 //	fmt.Println("-> ring structure")
 //	node4.printRing()
+
+       	fmt.Println(between([]byte("01"), []byte("03"), []byte("02")))
 
 }

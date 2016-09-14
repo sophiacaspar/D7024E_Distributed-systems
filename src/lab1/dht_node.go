@@ -34,8 +34,8 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 	dhtNode.successor = nil
 	dhtNode.predecessor = nil
 
-	dhtNode.finger_table = new(Finger_table)
-	dhtNode.finger_table.fingers = [size]*Finger
+	dhtNode.finger_table = &Finger_table{}
+	//dhtNode.finger_table.fingers = nil
 
 	return dhtNode
 }
@@ -62,9 +62,9 @@ func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 		newDHTNode.predecessor = dhtNode
 		newDHTNode.successor = dhtNode
 
-		for i:=1; i <= size; i++ {
-			newDHTNode.finger_table.fingers[i] = new(Finger{dhtNode.nodeId})
-			dhtNode.finger_table.fingers[i] = new(Finger{newDHTNode.nodeId})
+		for i:=0; i < size; i++ {
+			newDHTNode.finger_table.fingers[i] = &Finger{dhtNode.nodeId}
+			dhtNode.finger_table.fingers[i] = &Finger{newDHTNode.nodeId}
 
 		}
 
@@ -73,8 +73,11 @@ func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 		newDHTNode.successor = n
 		dhtNode.successor = newDHTNode
 		newDHTNode.predecessor = dhtNode
-		init_finger_table(newDHTNode)
+		newDHTNode.finger_table.fingers = init_finger_table(newDHTNode)
 		dhtNode.update_fingers()
+		
+		//fmt.Print(dhtNode.nodeId)
+		//fmt.Println(dhtNode.finger_table.fingers)
 		
 	} else {
 		n.addToRing(newDHTNode)
@@ -118,9 +121,12 @@ func (dhtNode *DHTNode) responsible(key string) bool {
 }
 
 func (dhtNode *DHTNode) printRing() {
-	fmt.Println(dhtNode.nodeId)
+	fmt.Print(dhtNode.nodeId, " ")
+	fmt.Println(dhtNode.finger_table.fingers)
 	for i:= dhtNode.successor; i != dhtNode; i = i.successor {
-		fmt.Println(i.nodeId)
+		//fmt.Println(i.nodeId)
+		fmt.Print(i.nodeId, " ")
+		fmt.Println(i.finger_table.fingers)
 	}
 }
 
