@@ -111,9 +111,11 @@ func (dhtNode *DHTNode) lookup(key string) *DHTNode {
 }
 
 func (dhtNode *DHTNode) acceleratedLookupUsingFingers(key string) *DHTNode {
-	// TODO
-	return dhtNode // XXX This is not correct obviously
-}
+		//node := lookup_fingers(dhtNode, key)
+		return dhtNode
+		}
+
+
 
 func (dhtNode *DHTNode) responsible(key string) bool {
 	// TODO
@@ -121,13 +123,20 @@ func (dhtNode *DHTNode) responsible(key string) bool {
 }
 
 func (dhtNode *DHTNode) printRing() {
-	fmt.Print(dhtNode.nodeId, " ")
-	fmt.Println(dhtNode.finger_table.fingers)
-	for i:= dhtNode.successor; i != dhtNode; i = i.successor {
-		//fmt.Println(i.nodeId)
-		fmt.Print(i.nodeId, " ")
-		fmt.Println(i.finger_table.fingers)
+	fmt.Print(dhtNode.nodeId, " [ ")
+	dhtNode.printFingers()
+	fmt.Println("]")
+	for i := dhtNode.successor; i != dhtNode; i = i.successor {
+		fmt.Print(i.nodeId, " [ ")
+		i.printFingers()
+		fmt.Println("]")
 	}
+}
+
+func (dhtNode *DHTNode) printFingers() {
+		for _, f := range dhtNode.finger_table.fingers {
+			fmt.Print(f.id, " ")
+		}
 }
 
 

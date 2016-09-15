@@ -22,7 +22,6 @@ func init_finger_table(node *DHTNode) [size]*Finger {
 			fingerHex = "00"	
 		} else{
 			fingerSuccessor := node.lookup(fingerHex)
-
 			fingerTable[i] = &Finger{fingerSuccessor.nodeId}
 		}
 	}
@@ -31,8 +30,25 @@ func init_finger_table(node *DHTNode) [size]*Finger {
 
 func (dhtNode *DHTNode) update_fingers() {
 	for i := dhtNode; i != dhtNode.successor; i = i.predecessor {
-		dhtNode.finger_table.fingers = init_finger_table(i)
+		i.finger_table.fingers = init_finger_table(i)
 	}
+}
+
+/**
+func lookup_fingers(node *DHTNode, key string) *DHTNode{
+	fingerTable := node.finger_table
+	var length = len(fingerTable)
+	for x := 0; i := length; i > 1; i--; x++ {
+		if (between([]byte(fingerTable[x].nodeId), []byte(fingerTable[i].nodeId), []byte(key))) {
+			if fingerTable[x] == key {
+				return fingerTable[x].nodeId
+			} 
+		} else {
+			return lookup_fingers(fingerTable[i], key)
+		}
+	}
+}
+*/
 
 /**
 func (dhtNode *DHTNode) update_finger_table(fNode *DHTNode, i int){
@@ -41,5 +57,6 @@ func (dhtNode *DHTNode) update_finger_table(fNode *DHTNode, i int){
 		p := dhtNode.predecessor
 		p.update_finger_table(fNode, i)
 	}
-*/
+
 }
+*/
