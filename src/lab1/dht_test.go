@@ -91,7 +91,7 @@ func TestDHT2(t *testing.T) {
 func TestDHT0(t *testing.T) {
         id0 := "00"
         id1 := "01"
-//        id2 := "02"
+        id2 := "02"
         id3 := "03"
         id4 := "04"
         id5 := "05"
@@ -100,7 +100,7 @@ func TestDHT0(t *testing.T) {
 
         node0 := makeDHTNode(&id0, "localhost", "1111")
         node1 := makeDHTNode(&id1, "localhost", "1112")
-//        node2 := makeDHTNode(&id2, "localhost", "1113")
+        node2 := makeDHTNode(&id2, "localhost", "1113")
         node3 := makeDHTNode(&id3, "localhost", "1114")
         node4 := makeDHTNode(&id4, "localhost", "1115")
         node5 := makeDHTNode(&id5, "localhost", "1116")
@@ -109,7 +109,7 @@ func TestDHT0(t *testing.T) {
 
 
 	node0.addToRing(node1)
-//	node1.addToRing(node2)
+	node1.addToRing(node2)
 	node1.addToRing(node3)
 	node1.addToRing(node4)
 	node4.addToRing(node5)
@@ -136,6 +136,7 @@ func TestDHT0(t *testing.T) {
 
        	node0.printRingFingers()
 
-       	fmt.Println(node0.acceleratedLookupUsingFingers("05"))
+       	fmt.Println(node1.acceleratedLookupUsingFingers("05").nodeId)
+       	//fmt.Println(node3.acceleratedLookupUsingFingers("02").nodeId)
 
 }

@@ -116,11 +116,12 @@ func (dhtNode *DHTNode) acceleratedLookupUsingFingers(key string) *DHTNode {
 		fingerTable := dhtNode.finger_table.fingers
 
 		for i := len(fingerTable); i > 0; i-- {
+			fmt.Println("Checks if ", key, " is between ", dhtNode.nodeId, " and ", fingerTable[(i-1)].nodeId)
 			if !(between([]byte(dhtNode.nodeId), []byte(fingerTable[(i-1)].nodeId), []byte(key))){
 				return fingerTable[(i-1)].acceleratedLookupUsingFingers(key)
 			} 
 		}
-		return dhtNode
+		return dhtNode.successor
 		}
 
 
