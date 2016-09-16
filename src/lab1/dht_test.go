@@ -117,6 +117,7 @@ func TestDHT0(t *testing.T) {
 	node3.addToRing(node7)
 
 
+/**
 	fmt.Println("node 3 lookups 04, should be 04")
 	fmt.Println(node3.lookup("04").nodeId)
 	fmt.Println("node 5 lookups 02, should be 03")
@@ -125,13 +126,16 @@ func TestDHT0(t *testing.T) {
         fmt.Println(node3.lookup("02").nodeId)
 	fmt.Println("node 3 lookups 01, should be 01")
         fmt.Println(node3.lookup("01").nodeId)
-
+*/
 
 	fmt.Println("-> ring structure")
        	node1.printRing()
 //	fmt.Println("-> ring structure")
 //	node4.printRing()
 
-       	fmt.Println(between([]byte("01"), []byte("03"), []byte("02")))
+
+       	node0.printRingFingers()
+
+       	fmt.Println(node0.acceleratedLookupUsingFingers("05"))
 
 }

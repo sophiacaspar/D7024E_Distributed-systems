@@ -2,18 +2,20 @@ package dht
 
 import "encoding/hex"
 
-const size int = 3 
+const size int = 9 
 type Finger_table struct {
-	fingers 	[size]*Finger
+	fingers 	[size]*DHTNode
 
 }
 
+/**
 type Finger struct {
 	id 		string
 }
+*/
 
-func init_finger_table(node *DHTNode) [size]*Finger {
-	var fingerTable [size]*Finger
+func init_finger_table(node *DHTNode) [size]*DHTNode {
+	var fingerTable [size]*DHTNode
 	for i:=0; i < size; i++ {
 		idBytes, _ := hex.DecodeString(node.nodeId)
 		fingerHex, _ := calcFinger(idBytes, (i+1), size)
@@ -22,7 +24,7 @@ func init_finger_table(node *DHTNode) [size]*Finger {
 			fingerHex = "00"	
 		} else{
 			fingerSuccessor := node.lookup(fingerHex)
-			fingerTable[i] = &Finger{fingerSuccessor.nodeId}
+			fingerTable[i] = fingerSuccessor
 		}
 	}
 	return fingerTable

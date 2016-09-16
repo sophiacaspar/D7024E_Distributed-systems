@@ -63,8 +63,8 @@ func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 		newDHTNode.successor = dhtNode
 
 		for i:=0; i < size; i++ {
-			newDHTNode.finger_table.fingers[i] = &Finger{dhtNode.nodeId}
-			dhtNode.finger_table.fingers[i] = &Finger{newDHTNode.nodeId}
+			newDHTNode.finger_table.fingers[i] = dhtNode
+			dhtNode.finger_table.fingers[i] = newDHTNode
 
 		}
 
@@ -112,6 +112,14 @@ func (dhtNode *DHTNode) lookup(key string) *DHTNode {
 
 func (dhtNode *DHTNode) acceleratedLookupUsingFingers(key string) *DHTNode {
 		//node := lookup_fingers(dhtNode, key)
+
+		fingerTable := dhtNode.finger_table.fingers
+
+		for i := len(fingerTable); i > 0; i-- {
+			if !(between([]byte(dhtNode.nodeId), []byte(fingerTable[(i-1)].nodeId), []byte(key))){
+				return fingerTable[(i-1)].acceleratedLookupUsingFingers(key)
+			} 
+		}
 		return dhtNode
 		}
 
@@ -123,6 +131,14 @@ func (dhtNode *DHTNode) responsible(key string) bool {
 }
 
 func (dhtNode *DHTNode) printRing() {
+	fmt.Println(dhtNode.nodeId)
+	for i := dhtNode.successor; i != dhtNode; i = i.successor {
+		fmt.Println(i.nodeId)
+	}
+	
+}
+
+func (dhtNode *DHTNode) printRingFingers() {
 	fmt.Print(dhtNode.nodeId, " [ ")
 	dhtNode.printFingers()
 	fmt.Println("]")
@@ -135,7 +151,7 @@ func (dhtNode *DHTNode) printRing() {
 
 func (dhtNode *DHTNode) printFingers() {
 		for _, f := range dhtNode.finger_table.fingers {
-			fmt.Print(f.id, " ")
+			fmt.Print(f.nodeId, " ")
 		}
 }
 
