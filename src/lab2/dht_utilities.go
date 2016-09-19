@@ -47,17 +47,17 @@ func between(id1, id2, key []byte) bool {
 
 // (n + 2^(k-1)) mod (2^m)
 func calcFinger(n []byte, k int, m int) (string, []byte) {
-	fmt.Println("calulcating result = (n+2^(k-1)) mod (2^m)")
+	//fmt.Println("calulcating result = (n+2^(k-1)) mod (2^m)")
 
 	// convert the n to a bigint
 	nBigInt := big.Int{}
 	nBigInt.SetBytes(n)
 
-	fmt.Printf("n            %s\n", nBigInt.String())
+	//fmt.Printf("n            %s\n", nBigInt.String())
 
-	fmt.Printf("k            %d\n", k)
+	//fmt.Printf("k            %d\n", k)
 
-	fmt.Printf("m            %d\n", m)
+	//fmt.Printf("m            %d\n", m)
 
 	// get the right addend, i.e. 2^(k-1)
 	two := big.NewInt(2)

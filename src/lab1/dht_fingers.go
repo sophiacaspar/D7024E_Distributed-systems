@@ -35,30 +35,3 @@ func (dhtNode *DHTNode) update_fingers() {
 		i.finger_table.fingers = init_finger_table(i)
 	}
 }
-
-/**
-func lookup_fingers(node *DHTNode, key string) *DHTNode{
-	fingerTable := node.finger_table
-	var length = len(fingerTable)
-	for x := 0; i := length; i > 1; i--; x++ {
-		if (between([]byte(fingerTable[x].nodeId), []byte(fingerTable[i].nodeId), []byte(key))) {
-			if fingerTable[x] == key {
-				return fingerTable[x].nodeId
-			} 
-		} else {
-			return lookup_fingers(fingerTable[i], key)
-		}
-	}
-}
-*/
-
-/**
-func (dhtNode *DHTNode) update_finger_table(fNode *DHTNode, i int){
-	if (between([]byte(dhtNode.nodeId), []byte(dhtNode.finger_table.fingers[i].id), []byte(fNode.nodeId))){
-		dhtNode.finger_table.fingers[i] = &Finger{fNode.nodeId}
-		p := dhtNode.predecessor
-		p.update_finger_table(fNode, i)
-	}
-
-}
-*/

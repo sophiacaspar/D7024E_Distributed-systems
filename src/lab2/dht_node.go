@@ -1,6 +1,9 @@
 package dht
 
-import "fmt"
+import (
+	"fmt"
+	"encoding/hex"
+)
 
 type Contact struct {
 	ip   string
@@ -12,6 +15,7 @@ type DHTNode struct {
 	successor   *DHTNode
 	predecessor *DHTNode
 	contact     Contact
+	finger_table 	*Finger_table
 }
 
 /*** CREATE ***/
@@ -29,6 +33,9 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 
 	dhtNode.successor = nil
 	dhtNode.predecessor = nil
+
+	dhtNode.finger_table = &Finger_table{}
+	//dhtNode.finger_table.fingers = nil
 
 	return dhtNode
 }
@@ -54,11 +61,23 @@ func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 		dhtNode.successor = newDHTNode
 		newDHTNode.predecessor = dhtNode
 		newDHTNode.successor = dhtNode
+
+		for i:=0; i < size; i++ {
+			newDHTNode.finger_table.fingers[i] = dhtNode
+			dhtNode.finger_table.fingers[i] = newDHTNode
+
+		}
+
 	} else if (between([]byte(dhtNode.nodeId), []byte(n.nodeId), []byte(newDHTNode.nodeId))){
 		n.predecessor = newDHTNode
 		newDHTNode.successor = n
 		dhtNode.successor = newDHTNode
 		newDHTNode.predecessor = dhtNode
+		newDHTNode.finger_table.fingers = init_finger_table(newDHTNode)
+		dhtNode.update_fingers()
+		
+		//fmt.Print(dhtNode.nodeId)
+		//fmt.Println(dhtNode.finger_table.fingers)
 		
 	} else {
 		n.addToRing(newDHTNode)
@@ -92,9 +111,21 @@ func (dhtNode *DHTNode) lookup(key string) *DHTNode {
 }
 
 func (dhtNode *DHTNode) acceleratedLookupUsingFingers(key string) *DHTNode {
-	// TODO
-	return dhtNode // XXX This is not correct obviously
-}
+		//node := lookup_fingers(dhtNode, key)
+
+		fingerTable := dhtNode.finger_table.fingers
+
+		for i := len(fingerTable); i > 0; i-- {
+			fmt.Println(i)
+			fmt.Println("Checks if ", key, " is between ", dhtNode.nodeId, " and ", fingerTable[(i-1)].nodeId)
+			if !(between([]byte(dhtNode.nodeId), []byte(fingerTable[(i-1)].nodeId), []byte(key))){
+				return fingerTable[(i-1)].acceleratedLookupUsingFingers(key)
+			} 
+		}
+		return dhtNode.successor
+		}
+
+
 
 func (dhtNode *DHTNode) responsible(key string) bool {
 	// TODO
@@ -102,25 +133,38 @@ func (dhtNode *DHTNode) responsible(key string) bool {
 }
 
 func (dhtNode *DHTNode) printRing() {
-	n := dhtNode.successor
 	fmt.Println(dhtNode.nodeId)
-	for i:= n; i != dhtNode; i = i.getNext() {
+	for i := dhtNode.successor; i != dhtNode; i = i.successor {
 		fmt.Println(i.nodeId)
 	}
-
+	
 }
 
-func (dhtNode *DHTNode) getNext() *DHTNode {
-	return dhtNode.successor
+func (dhtNode *DHTNode) printRingFingers() {
+	fmt.Print(dhtNode.nodeId, " [ ")
+	dhtNode.printFingers()
+	fmt.Println("]")
+	for i := dhtNode.successor; i != dhtNode; i = i.successor {
+		fmt.Print(i.nodeId, " [ ")
+		i.printFingers()
+		fmt.Println("]")
+	}
 }
+
+func (dhtNode *DHTNode) printFingers() {
+		for _, f := range dhtNode.finger_table.fingers {
+			fmt.Print(f.nodeId, " ")
+		}
+}
+
 
 func (dhtNode *DHTNode) testCalcFingers(m int, bits int) {
-	/* idBytes, _ := hex.DecodeString(dhtNode.nodeId)
+	idBytes, _ := hex.DecodeString(dhtNode.nodeId)
 	fingerHex, _ := calcFinger(idBytes, m, bits)
 	fingerSuccessor := dhtNode.lookup(fingerHex)
 	fingerSuccessorBytes, _ := hex.DecodeString(fingerSuccessor.nodeId)
 	fmt.Println("successor    " + fingerSuccessor.nodeId)
 
 	dist := distance(idBytes, fingerSuccessorBytes, bits)
-	fmt.Println("distance     " + dist.String()) */
+	fmt.Println("distance     " + dist.String())
 }

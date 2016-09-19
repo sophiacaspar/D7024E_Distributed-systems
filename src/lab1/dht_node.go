@@ -111,7 +111,6 @@ func (dhtNode *DHTNode) lookup(key string) *DHTNode {
 }
 
 func (dhtNode *DHTNode) acceleratedLookupUsingFingers(key string) *DHTNode {
-		//node := lookup_fingers(dhtNode, key)
 
 		fingerTable := dhtNode.finger_table.fingers
 
