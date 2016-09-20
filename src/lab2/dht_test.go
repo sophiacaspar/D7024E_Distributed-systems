@@ -55,6 +55,15 @@ func TestDHT2(t *testing.T) {
 	node8 := makeDHTNode(nil, "localhost", "1118")
 	node9 := makeDHTNode(nil, "localhost", "1119")
 
+	node1.startServer()
+	node2.startServer()
+
+	dest := node2.contact.ip + ":" + node2.contact.port
+	source := node1.contact.ip + ":" + node1.contact.port
+	node1.transport.send(&Msg{"hello", source, dest, []byte("hello world")})
+
+	node3.transport.listen()
+
 	key1 := "2b230fe12d1c9c60a8e489d028417ac89de57635"
 	key2 := "87adb987ebbd55db2c5309fd4b23203450ab0083"
 	key3 := "74475501523a71c34f945ae4e87d571c2c57f6f3"

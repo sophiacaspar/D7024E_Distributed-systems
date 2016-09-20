@@ -16,7 +16,10 @@ type DHTNode struct {
 	predecessor *DHTNode
 	contact     Contact
 	finger_table 	*Finger_table
+	transport	*Transport
 }
+
+
 
 /*** CREATE ***/
 func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
@@ -35,23 +38,21 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 	dhtNode.predecessor = nil
 
 	dhtNode.finger_table = &Finger_table{}
+	dhtNode.transport = &Transport{dhtNode.contact.ip + ":" + dhtNode.contact.port, nil}
+	dhtNode.transport.msgQueue = make(chan *Msg)
+	dhtNode.transport.init_msgQueue()
+	//dhtNode.transport.listen()
 	//dhtNode.finger_table.fingers = nil
+
 
 	return dhtNode
 }
 
 
-func (dhtNode *DHTNode) findPredecessor(node *DHTNode) *DHTNode{
-        succsNode := dhtNode
-        return succsNode
+func (dhtNode *DHTNode) startServer() {
+	fmt.Println(dhtNode.nodeId)
+	go dhtNode.transport.listen()	
 }
-
-
-func (dhtNode *DHTNode) findSuccessor(node *DHTNode) *DHTNode{
-	predNode := dhtNode.findPredecessor(node)
-	return predNode.successor
-}
-
 
 // JOIN
 func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
@@ -82,8 +83,8 @@ func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 	} else {
 		n.addToRing(newDHTNode)
 	}
-
 }
+
 
 
 // periodically verify nodes immediate successor and tell the successor about node
@@ -111,7 +112,6 @@ func (dhtNode *DHTNode) lookup(key string) *DHTNode {
 }
 
 func (dhtNode *DHTNode) acceleratedLookupUsingFingers(key string) *DHTNode {
-		//node := lookup_fingers(dhtNode, key)
 
 		fingerTable := dhtNode.finger_table.fingers
 
@@ -132,6 +132,10 @@ func (dhtNode *DHTNode) responsible(key string) bool {
 	return false
 }
 
+
+
+
+/** OUTPUTS **/
 func (dhtNode *DHTNode) printRing() {
 	fmt.Println(dhtNode.nodeId)
 	for i := dhtNode.successor; i != dhtNode; i = i.successor {
