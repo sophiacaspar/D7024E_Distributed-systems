@@ -1,5 +1,6 @@
-package dht
 
+package dht
+/*
 import "encoding/hex"
 
 const size int = 3 
@@ -8,11 +9,7 @@ type Finger_table struct {
 
 }
 
-/**
-type Finger struct {
-	id 		string
-}
-*/
+
 
 func init_finger_table(node *DHTNode) [size]*DHTNode {
 	var fingerTable [size]*DHTNode
@@ -29,9 +26,10 @@ func init_finger_table(node *DHTNode) [size]*DHTNode {
 	}
 	return fingerTable
 }
-
+/*
 func (dhtNode *DHTNode) update_fingers() {
 	for i := dhtNode; i != dhtNode.successor; i = i.predecessor {
 		i.finger_table.fingers = init_finger_table(i)
 	}
 }
+*/

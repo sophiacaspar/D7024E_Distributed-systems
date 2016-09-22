@@ -7,6 +7,7 @@ import (
 	"testing"
 )
 
+/**
 func TestDHT1(t *testing.T) {
 	id0 := "00"
 	id1 := "01"
@@ -36,12 +37,12 @@ func TestDHT1(t *testing.T) {
 
 	fmt.Println("-> ring structure")
 	node1b.printRing()
-/**
+
 	node3b.testCalcFingers(0, 3)
 	node3b.testCalcFingers(1, 3)
 	node3b.testCalcFingers(2, 3)
 	node3b.testCalcFingers(3, 3)
-	*/
+	
 }
 
 func TestDHT2(t *testing.T) {
@@ -126,7 +127,7 @@ func TestDHT0(t *testing.T) {
 	node3.addToRing(node7)
 
 
-/**
+
 	fmt.Println("node 3 lookups 04, should be 04")
 	fmt.Println(node3.lookup("04").nodeId)
 	fmt.Println("node 5 lookups 02, should be 03")
@@ -135,7 +136,7 @@ func TestDHT0(t *testing.T) {
         fmt.Println(node3.lookup("02").nodeId)
 	fmt.Println("node 3 lookups 01, should be 01")
         fmt.Println(node3.lookup("01").nodeId)
-*/
+
 
 	fmt.Println("-> ring structure")
        	node1.printRing()
@@ -149,3 +150,56 @@ func TestDHT0(t *testing.T) {
        	//fmt.Println(node3.acceleratedLookupUsingFingers("02").nodeId)
 
 }
+*/
+
+func TestDHT4(t *testing.T) {
+	id0 := "00"
+    id1 := "01"
+    id2 := "02"
+    id3 := "03"
+    id4 := "04"
+    id5 := "05"
+    id6 := "06"
+    id7 := "07"
+
+    node0 := makeDHTNode(&id0, "localhost", "1111")
+    node1 := makeDHTNode(&id1, "localhost", "1112")
+    node2 := makeDHTNode(&id2, "localhost", "1113")
+    node3 := makeDHTNode(&id3, "localhost", "1114")
+    node4 := makeDHTNode(&id4, "localhost", "1115")
+    node5 := makeDHTNode(&id5, "localhost", "1116")
+    node6 := makeDHTNode(&id6, "localhost", "1117")
+    node7 := makeDHTNode(&id7, "localhost", "1118")
+
+	node1.startServer()
+	node2.startServer()
+	node3.startServer()
+	node4.startServer()
+	node5.startServer()
+	node6.startServer()
+	node7.startServer()
+	
+
+	msg1 := createJoinMsg(id4, node1.transport.bindAddress, node4.transport.bindAddress)
+	msg2 := createJoinMsg(id4, node2.transport.bindAddress, node4.transport.bindAddress)
+	msg3 := createJoinMsg(id3, node1.transport.bindAddress, node3.transport.bindAddress)
+	msg4 := createJoinMsg(id5, node3.transport.bindAddress, node5.transport.bindAddress)
+	msg5 := createJoinMsg(id6, node1.transport.bindAddress, node6.transport.bindAddress)
+	msg6 := createJoinMsg(id7, node2.transport.bindAddress, node7.transport.bindAddress)
+	msg7 := createJoinMsg(id0, node7.transport.bindAddress, node0.transport.bindAddress)
+
+	go func () { node1.transport.send(msg1)}() 
+	go func () { node2.transport.send(msg2)}() 
+	go func () { node1.transport.send(msg3)}() 
+	go func () { node3.transport.send(msg4)}()
+	go func () { node1.transport.send(msg5)}() 
+	go func () { node2.transport.send(msg6)}()
+	go func () { node2.transport.send(msg7)}()
+
+	fmt.Println("---- Ring structure ----")	
+	msg := createPrintMsg(node1.transport.bindAddress, node2.transport.bindAddress)
+	go func () { node1.transport.send(msg)}()
+
+	node0.transport.listen()
+
+	}

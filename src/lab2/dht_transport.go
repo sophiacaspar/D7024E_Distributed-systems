@@ -6,8 +6,6 @@ import (
 	"fmt"
 )
 
-
-
 type Transport struct {
 	bindAddress		string
 	msgQueue		chan *Msg
@@ -44,15 +42,12 @@ func (transport *Transport) init_msgQueue() {
 			select {
 				case m := <-transport.msgQueue:
 					switch m.Type {
-						case "hello": 
-							fmt.Println(string(m.Key))
-							transport.send(&Msg{"reply","", m.Src, []byte("fuck off")})
-						case "reply":
-							fmt.Println(string(m.Key))
-						case "addToRing": 
-							fmt.Println(string(m.Key))
-							transport.send(&Msg{"ack","", m.Src, []byte("adding to ring")})
-							transport.dhtNode.
+						case "updatePred":
+							transport.dhtNode.setPredecessor(m)
+						case "updateSucc":
+							transport.dhtNode.setSuccessor(m)
+						case "printRing":
+							transport.dhtNode.printRing(m)
 					}
 				}	
 			}		
