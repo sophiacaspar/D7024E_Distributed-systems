@@ -11,12 +11,12 @@ type Contact struct {
 }
 
 type DHTNode struct {
-	nodeId      string
-	successor   *DHTNode
-	predecessor *DHTNode
-	contact     Contact
+	nodeId      	string
+	successor   	*DHTNode
+	predecessor 	*DHTNode
+	contact     	Contact
 	finger_table 	*Finger_table
-	transport	*Transport
+	transport		*Transport
 }
 
 
@@ -38,9 +38,7 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 	dhtNode.predecessor = nil
 
 	dhtNode.finger_table = &Finger_table{}
-	dhtNode.transport = &Transport{dhtNode.contact.ip + ":" + dhtNode.contact.port, nil}
-	dhtNode.transport.msgQueue = make(chan *Msg)
-	dhtNode.transport.init_msgQueue()
+	dhtNode.createTransport()
 	//dhtNode.transport.listen()
 	//dhtNode.finger_table.fingers = nil
 
@@ -48,6 +46,12 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 	return dhtNode
 }
 
+func (dhtNode *DHTNode) createTransport() {
+	dhtNode.transport = &Transport{dhtNode.contact.ip + ":" + dhtNode.contact.port, nil, dhtNode}
+	dhtNode.transport.msgQueue = make(chan *Msg)
+	dhtNode.transport.init_msgQueue()
+	
+}
 
 func (dhtNode *DHTNode) startServer() {
 	fmt.Println(dhtNode.nodeId)
@@ -74,6 +78,7 @@ func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 		newDHTNode.successor = n
 		dhtNode.successor = newDHTNode
 		newDHTNode.predecessor = dhtNode
+		dhtNode.stabilize()
 		newDHTNode.finger_table.fingers = init_finger_table(newDHTNode)
 		dhtNode.update_fingers()
 		
