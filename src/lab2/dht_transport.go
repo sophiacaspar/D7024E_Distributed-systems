@@ -42,6 +42,8 @@ func (transport *Transport) init_msgQueue() {
 			select {
 				case m := <-transport.msgQueue:
 					switch m.Type {
+						case "addToRing":
+							transport.dhtNode.addToRing(m)
 						case "updatePred":
 							transport.dhtNode.setPredecessor(m)
 						case "updateSucc":

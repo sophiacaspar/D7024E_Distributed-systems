@@ -61,13 +61,14 @@ func (dhtNode *DHTNode) startServer() {
 // JOIN
 func (dhtNode *DHTNode) addToRing(msg *Msg) {
 	//n := dhtNode.successor
-	if (len(dhtNode.predecessor) == 0 && dhtNode.successor[1] == dhtNode.nodeId) {
+	if 	(dhtNode.predecessor[0] == "" && dhtNode.successor[1] == dhtNode.nodeId) {
+		fmt.Println("Only two nodes in ring")
 		dhtNode.setPredecessor(msg)
 		dhtNode.successor[0] = msg.Src
 		dhtNode.successor[1] = msg.Key
 
-		newPred := createUpdatePSMsg("updatePred", dhtNode.nodeId, dhtNode.contact.ip + ":" + dhtNode.contact.port, msg.Src)
-		newSucc := createUpdatePSMsg("updateSucc", dhtNode.nodeId, dhtNode.contact.ip + ":" + dhtNode.contact.port, msg.Src)
+		newPred := createUpdatePSMsg("updatePred", dhtNode.nodeId, dhtNode.transport.bindAddress, msg.Src)
+		newSucc := createUpdatePSMsg("updateSucc", dhtNode.nodeId, dhtNode.transport.bindAddress, msg.Src)
 		go func () { dhtNode.transport.send(newPred)}() 
 		go func () { dhtNode.transport.send(newSucc)}() 
 
@@ -80,9 +81,10 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 		*/
 
 	} else if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(msg.Key))){
+		fmt.Println("join with more nodes")
 		changeDHTNodeSuccPred := createUpdatePSMsg("updatePred", msg.Key, msg.Src, dhtNode.successor[0])
 		changeNewNodeSucc := createUpdatePSMsg("updateSucc", dhtNode.successor[1], dhtNode.successor[0], msg.Src)
-		changeNewNodePred := createUpdatePSMsg("updatePred", dhtNode.nodeId, dhtNode.contact.ip + ":" + dhtNode.contact.port, msg.Src)
+		changeNewNodePred := createUpdatePSMsg("updatePred", dhtNode.nodeId, dhtNode.transport.bindAddress, msg.Src)
 		go func () { dhtNode.transport.send(changeDHTNodeSuccPred)}() 
 		go func () { dhtNode.transport.send(changeNewNodeSucc)}() 
 		go func () { dhtNode.transport.send(changeNewNodePred)}() 
@@ -90,7 +92,7 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 		dhtNode.successor[0] = msg.Src
 		dhtNode.successor[1] = msg.Key
 
-		//n.predecessor = newDHTNode
+		//dhtNode.successor.predecessor = newDHTNode
 		//newDHTNode.successor = n
 
 		//dhtNode.successor = newDHTNode
@@ -116,12 +118,14 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 func (dhtNode *DHTNode) setPredecessor(msg *Msg){
         dhtNode.predecessor[0] = msg.Src
 		dhtNode.predecessor[1] = msg.Key
+		fmt.Println(dhtNode.nodeId, " predecessor: ", dhtNode.predecessor)
 }
 
 
 func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
 		dhtNode.successor[0] = msg.Src
 		dhtNode.successor[1] = msg.Key
+		fmt.Println(dhtNode.nodeId, " successor: ", dhtNode.successor)
 }
 
 /*
