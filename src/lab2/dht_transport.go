@@ -43,7 +43,8 @@ func (transport *Transport) init_msgQueue() {
 				case m := <-transport.msgQueue:
 					switch m.Type {
 						case "addToRing":
-							transport.dhtNode.addToRing(m)
+							transport.dhtNode.createTask("join", m)
+							//transport.dhtNode.addToRing(m)
 						case "updatePred":
 							transport.dhtNode.setPredecessor(m)
 						case "updateSucc":
@@ -55,6 +56,7 @@ func (transport *Transport) init_msgQueue() {
 			}		
 		} ()
 }
+
 
 func (transport *Transport) send(msg *Msg) {
 	udpAddr, err := net.ResolveUDPAddr("udp", msg.Dst)

@@ -17,6 +17,12 @@ type DHTNode struct {
 	contact     	Contact
 	//finger_table 	*Finger_table
 	transport		*Transport
+	taskQueue 		chan *Task
+}
+
+type Task struct {
+	taskType 	string
+	msg 		*Msg
 }
 
 
@@ -36,6 +42,7 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 
 	dhtNode.successor = [2]string{dhtNode.contact.ip + ":" + dhtNode.contact.port, dhtNode.nodeId}
 	dhtNode.predecessor = [2]string{}
+	dhtNode.taskQueue = make(chan *Task)
 
 	//dhtNode.finger_table = &Finger_table{}
 	dhtNode.createTransport()
@@ -53,8 +60,14 @@ func (dhtNode *DHTNode) createTransport() {
 	
 }
 
+func (dhtNode *DHTNode) createTask(taskType string, msg *Msg) {
+	task := &Task{taskType, msg}
+	dhtNode.taskQueue <- task
+}
+
 func (dhtNode *DHTNode) startServer() {
 	fmt.Println("starting node ", dhtNode.nodeId)
+	go dhtNode.init_taskQueue()
 	go dhtNode.transport.listen()	
 }
 
@@ -217,3 +230,18 @@ func (dhtNode *DHTNode) testCalcFingers(m int, bits int) {
 }
 
 */
+
+func (dhtNode *DHTNode) init_taskQueue() {
+	
+	go func() {
+		for {
+			select {
+				case t := <-dhtNode.taskQueue:
+					switch t.taskType {
+						case "join":
+							dhtNode.addToRing(t.msg)
+					}
+				}	
+			}		
+		} ()
+}
