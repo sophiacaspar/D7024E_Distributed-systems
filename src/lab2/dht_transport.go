@@ -43,7 +43,7 @@ func (transport *Transport) init_msgQueue() {
 				case m := <-transport.msgQueue:
 					switch m.Type {
 						case "addToRing":
-							transport.dhtNode.createTask("join", m)
+							transport.dhtNode.createTask("addToRing", m)
 							//transport.dhtNode.addToRing(m)
 						case "updatePred":
 							transport.dhtNode.setPredecessor(m)
@@ -64,13 +64,13 @@ func (transport *Transport) send(msg *Msg) {
 	conn, err := net.DialUDP("udp", nil, udpAddr)
 
 	bytes, err := json.Marshal(msg)
-	defer conn.Close()
-
-	_, err = conn.Write(bytes)
-
 	if err != nil {
 		fmt.Println(err)
 	}
+	defer conn.Close()
+
+
+	_, err = conn.Write(bytes)
 }
 
 

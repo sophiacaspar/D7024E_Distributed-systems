@@ -6,16 +6,18 @@ type Msg struct {
 	Key			string
 	Src       	string
 	Dst      	string
+	LightNode	[2]string 	// 0: address, 1: nodeID
 	Bytes		[]byte
 }
 
-func createMessage(t, origin, key, src, dst string, bytes []byte) *Msg {
+func createMessage(t, origin, key, src, dst string, ln [2]string, bytes []byte) *Msg {
 	Msg := &Msg{}
 	Msg.Type = t
 	Msg.Origin = origin
 	Msg.Key = key
 	Msg.Src = src
 	Msg.Dst = dst
+	Msg.LightNode = ln
 	Msg.Bytes = bytes
 	return Msg
 }
@@ -27,29 +29,32 @@ func createAckMsg(src, dst string) *Msg{
 	Msg.Key = ""
 	Msg.Src = src
 	Msg.Dst = dst
+	Msg.LightNode = [2]string{}
 	Msg.Bytes = nil
 	return Msg
 }
 
-func createJoinMsg(key, src, dst string) *Msg {
+func createJoinMsg(dst string, newNodeInfo [2]string) *Msg {
 	Msg := &Msg{}
 	Msg.Type = "addToRing"
 	Msg.Origin = ""
-	Msg.Key = key
-	Msg.Src = src
+	Msg.Key = ""
+	Msg.Src = ""
 	Msg.Dst = dst
+	Msg.LightNode = newNodeInfo
 	Msg.Bytes = nil
 	return Msg
 	
 }
 
-func createUpdatePSMsg(t, nodeID, src, dst string) *Msg{
+func createUpdatePSMsg(t, dst string, newNodeInfo [2]string) *Msg{
 	Msg := &Msg{}
 	Msg.Type = t
 	Msg.Origin = ""
-	Msg.Key = nodeID
-	Msg.Src = src
+	Msg.Key = ""
+	Msg.Src = ""
 	Msg.Dst = dst
+	Msg.LightNode = newNodeInfo
 	Msg.Bytes = nil
 	return Msg
 }
@@ -61,6 +66,20 @@ func createPrintMsg(origin, dst string) *Msg{
 	Msg.Key = ""
 	Msg.Src = ""
 	Msg.Dst = dst
+	Msg.LightNode = [2]string{}
 	Msg.Bytes = nil
 	return Msg
 }
+
+func createPredMsg(origin, dst string, ln [2]string) *Msg{
+	Msg := &Msg{}
+	Msg.Type = "getPred"
+	Msg.Origin = origin
+	Msg.Key = ""
+	Msg.Src = ""
+	Msg.Dst = dst
+	Msg.LightNode = ln
+	Msg.Bytes = nil
+	return Msg
+}
+
