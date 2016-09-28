@@ -90,15 +90,9 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 		//go func () { dhtNode.transport.send(newPred)}() 
 		go func () { dhtNode.transport.send(newSucc)}() 
 
-/**		TODO: USE TIMER FOR FINGERS LATER
-		for i:=0; i < size; i++ {
-			newDHTNode.finger_table.fingers[i] = dhtNode
-			dhtNode.finger_table.fingers[i] = newDHTNode
-
-		}
-		*/
 
 	} else if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(msg.LightNode[1]))){
+		fmt.Println(msg.LightNode[1], " is between ", dhtNode.nodeId, " and ", dhtNode.successor[1])
 		fmt.Println("join with more nodes")
 		//changeDHTNodeSuccPred := createUpdatePSMsg("updatePred", msg.Key, msg.Src, dhtNode.successor[0])
 		changeNewNodeSucc := createUpdatePSMsg("updateSucc", msg.LightNode[0], [2]string{dhtNode.successor[0], dhtNode.successor[1]})
@@ -111,7 +105,6 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 
 		dhtNode.successor[0] = msg.LightNode[0]
 		dhtNode.successor[1] = msg.LightNode[1]
-
 		//dhtNode.successor.predecessor = newDHTNode
 		//newDHTNode.successor = n
 
@@ -139,7 +132,7 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 func (dhtNode *DHTNode) setPredecessor(msg *Msg){
         dhtNode.predecessor[0] = msg.LightNode[0]
 		dhtNode.predecessor[1] = msg.LightNode[1]
-		fmt.Println(dhtNode.nodeId, " predecessor: ", dhtNode.predecessor)
+		//fmt.Println(dhtNode.nodeId, " predecessor: ", dhtNode.predecessor)
 }
 
 func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
@@ -147,7 +140,7 @@ func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
 		//dhtNode.successor[1] = msg.Key
 		dhtNode.successor[0] = msg.LightNode[0]
 		dhtNode.successor[1] = msg.LightNode[1]
-		fmt.Println(dhtNode.nodeId, " successor: ", dhtNode.successor)
+		fmt.Println(dhtNode.nodeId, " successor is ", dhtNode.successor)
 }
 
 
@@ -266,7 +259,9 @@ func (dhtNode *DHTNode) init_taskQueue() {
 				case t := <-dhtNode.taskQueue:
 					switch t.taskType {
 						case "addToRing":
+							fmt.Println(dhtNode.nodeId, " adds ", t.msg.LightNode[1])
 							dhtNode.addToRing(t.msg)
+							fmt.Println("exit", dhtNode.nodeId)
 					}
 				}	
 			}		
