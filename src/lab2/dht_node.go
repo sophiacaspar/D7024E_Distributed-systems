@@ -136,8 +136,6 @@ func (dhtNode *DHTNode) setPredecessor(msg *Msg){
 }
 
 func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
-		//dhtNode.successor[0] = msg.Src
-		//dhtNode.successor[1] = msg.Key
 		dhtNode.successor[0] = msg.LightNode[0]
 		dhtNode.successor[1] = msg.LightNode[1]
 		fmt.Println(dhtNode.nodeId, " successor is ", dhtNode.successor)
@@ -146,6 +144,7 @@ func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
 
 // WTF
 func (dhtNode *DHTNode) getPredecessor(msg *Msg) {
+		m := createPredMsg(msg.Origin, msg.Src, dhtNode.predecessor)
 		//myPred := &LightNode{dhtNode.predecessor[0], dhtNode.predecessor[1]}
 		//m := createPredMsg(msg.Origin, msg.Src, myPred)
 

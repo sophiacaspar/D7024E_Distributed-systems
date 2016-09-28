@@ -54,9 +54,6 @@ func TestDHT4(t *testing.T) {
 	node3.joinReq(node1)
 	node2.joinReq(node1)
 
-	//fmt.Println("---- Ring structure ----")	
-	//msg := createPrintMsg(node1.transport.bindAddress, node2.transport.bindAddress)
-	//go func () { node1.transport.send(msg)}()
 	node0.transport.listen()
 
 	}
