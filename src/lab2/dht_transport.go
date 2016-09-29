@@ -12,8 +12,6 @@ type Transport struct {
 	dhtNode			*DHTNode
 }
 
-
-
 func (transport *Transport) listen() {
 	udpAddr, err := net.ResolveUDPAddr("udp", transport.bindAddress)
 	conn, err := net.ListenUDP("udp", udpAddr)
@@ -57,7 +55,6 @@ func (transport *Transport) init_msgQueue() {
 		} ()
 }
 
-
 func (transport *Transport) send(msg *Msg) {
 	udpAddr, err := net.ResolveUDPAddr("udp", msg.Dst)
 
@@ -72,5 +69,3 @@ func (transport *Transport) send(msg *Msg) {
 
 	_, err = conn.Write(bytes)
 }
-
-

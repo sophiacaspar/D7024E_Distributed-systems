@@ -30,8 +30,6 @@ type Task struct {
 	msg 		*Msg
 }
 
-
-
 /*** CREATE ***/
 func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 	dhtNode := new(DHTNode)
@@ -54,7 +52,6 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 	//dhtNode.transport.listen()
 	//dhtNode.finger_table.fingers = nil
 
-
 	return dhtNode
 }
 
@@ -62,7 +59,6 @@ func (dhtNode *DHTNode) createTransport() {
 	dhtNode.transport = &Transport{dhtNode.contact.ip + ":" + dhtNode.contact.port, nil, dhtNode}
 	dhtNode.transport.msgQueue = make(chan *Msg)
 	dhtNode.transport.init_msgQueue()
-	
 }
 
 func (dhtNode *DHTNode) createTask(taskType string, msg *Msg) {
@@ -144,13 +140,39 @@ func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
 
 // WTF
 func (dhtNode *DHTNode) getPredecessor(msg *Msg) {
-		m := createPredMsg(msg.Origin, msg.Src, dhtNode.predecessor)
+		//m := createPredMsg(msg.Origin, msg.Src, dhtNode.predecessor)
 		//myPred := &LightNode{dhtNode.predecessor[0], dhtNode.predecessor[1]}
 		//m := createPredMsg(msg.Origin, msg.Src, myPred)
+}
 
+/******* OUTPUTS ********/
+func (dhtNode *DHTNode) printRing(msg *Msg) {
+	if msg.Origin != msg.Dst {
+		fmt.Println("Pos in ring:", msg.Dst)
+		msg := createPrintMsg(msg.Origin, dhtNode.successor[0])
+		go func () { dhtNode.transport.send(msg)}() 
+	} else {
+		fmt.Println("Pos origin:", msg.Origin)
+	}
 	
 }
 
+func (dhtNode *DHTNode) init_taskQueue() {
+	
+	go func() {
+		for {
+			select {
+				case t := <-dhtNode.taskQueue:
+					switch t.taskType {
+						case "addToRing":
+							fmt.Println(dhtNode.nodeId, " adds ", t.msg.LightNode[1])
+							dhtNode.addToRing(t.msg)
+							fmt.Println("exit", dhtNode.nodeId)
+					}
+				}	
+			}		
+		} ()
+}
 
 // responskö
 // periodically verify nodes immediate successor and tell the successor about node
@@ -209,15 +231,6 @@ func (dhtNode *DHTNode) responsible(key string) bool {
 
 */
 
-/******* OUTPUTS ********/
-func (dhtNode *DHTNode) printRing(msg *Msg) {
-	if msg.Origin != msg.Dst {
-		fmt.Println(msg.Src)
-		msg := createPrintMsg(msg.Origin, dhtNode.successor[0])
-		go func () { dhtNode.transport.send(msg)}() 
-	}	
-}
-
 /**
 func (dhtNode *DHTNode) printRingFingers() {
 	fmt.Print(dhtNode.nodeId, " [ ")
@@ -249,20 +262,3 @@ func (dhtNode *DHTNode) testCalcFingers(m int, bits int) {
 }
 
 */
-
-func (dhtNode *DHTNode) init_taskQueue() {
-	
-	go func() {
-		for {
-			select {
-				case t := <-dhtNode.taskQueue:
-					switch t.taskType {
-						case "addToRing":
-							fmt.Println(dhtNode.nodeId, " adds ", t.msg.LightNode[1])
-							dhtNode.addToRing(t.msg)
-							fmt.Println("exit", dhtNode.nodeId)
-					}
-				}	
-			}		
-		} ()
-}

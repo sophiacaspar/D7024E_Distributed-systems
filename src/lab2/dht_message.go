@@ -44,7 +44,6 @@ func createJoinMsg(dst string, newNodeInfo [2]string) *Msg {
 	Msg.LightNode = newNodeInfo
 	Msg.Bytes = nil
 	return Msg
-	
 }
 
 func createUpdatePSMsg(t, dst string, newNodeInfo [2]string) *Msg{
@@ -82,4 +81,3 @@ func createPredMsg(origin, dst string, ln [2]string) *Msg{
 	Msg.Bytes = nil
 	return Msg
 }
-

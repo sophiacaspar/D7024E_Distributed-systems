@@ -1,5 +1,6 @@
 package dht
 
+/**
 import (
 	"net"
 	"encoding/json"
@@ -71,5 +72,7 @@ func (transport *Transport) send(msg *Msg) {
 		fmt.Println(err)
 	}
 }
+
+*/
 
 
