@@ -70,12 +70,36 @@ func createPrintMsg(origin, dst string) *Msg{
 	return Msg
 }
 
-func createPredMsg(origin, dst string, ln [2]string) *Msg{
+func createResponseMsg(src, dst string, ln [2]string) *Msg{
 	Msg := &Msg{}
-	Msg.Type = "getPred"
-	Msg.Origin = origin
+	Msg.Type = "response"
+	Msg.Origin = ""
 	Msg.Key = ""
-	Msg.Src = ""
+	Msg.Src = src
+	Msg.Dst = dst
+	Msg.LightNode = ln
+	Msg.Bytes = nil
+	return Msg
+}
+
+func createGetNodeMsg(t, src, dst string) *Msg{
+	Msg := &Msg{}
+	Msg.Type = t
+	Msg.Origin = ""
+	Msg.Key = ""
+	Msg.Src = src
+	Msg.Dst = dst
+	Msg.LightNode = [2]string{}
+	Msg.Bytes = nil
+	return Msg
+}
+
+func createNotifyMsg(src, dst string, ln [2]string) *Msg{
+	Msg := &Msg{}
+	Msg.Type = "notify"
+	Msg.Origin = ""
+	Msg.Key = ""
+	Msg.Src = src
 	Msg.Dst = dst
 	Msg.LightNode = ln
 	Msg.Bytes = nil

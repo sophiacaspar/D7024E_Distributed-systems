@@ -55,9 +55,14 @@ func TestDHT1(t *testing.T) {
 	node3.joinReq(node1)
 	node2.joinReq(node1)
 
+<<<<<<< HEAD
 	time.Sleep(100*time.Millisecond)
 	msg := createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress)
 	go func () { node1.transport.send(msg)}() 
+=======
+	time.Sleep(time.Millisecond*1000)
+	node3.stabilize()
+>>>>>>> origin/master
 
 	node0.transport.listen()
 
