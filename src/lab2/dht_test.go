@@ -5,6 +5,7 @@ package dht
 import (
 	//"fmt"
 	"testing"
+	"time"
 )
 
 // dhtNode sends request to master of ring: please add me somewhere
@@ -53,6 +54,9 @@ func TestDHT4(t *testing.T) {
 	node4.joinReq(node1)
 	node3.joinReq(node1)
 	node2.joinReq(node1)
+
+	time.Sleep(time.Millisecond*1000)
+	node3.stabilize()
 
 	node0.transport.listen()
 

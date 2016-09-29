@@ -51,6 +51,12 @@ func (transport *Transport) init_msgQueue() {
 							transport.dhtNode.setSuccessor(m)
 						case "printRing":
 							transport.dhtNode.printRing(m)
+						case "pred":
+							transport.dhtNode.getPredecessor(m)
+						case "response":
+							transport.dhtNode.responseQueue <- m
+						case "notify":
+							transport.dhtNode.notify(m)
 					}
 				}	
 			}		

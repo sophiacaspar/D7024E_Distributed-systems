@@ -2,6 +2,7 @@ package dht
 
 import (
 	"fmt"
+	"time"
 	//"encoding/hex"
 )
 
@@ -18,6 +19,7 @@ type DHTNode struct {
 	//finger_table 	*Finger_table
 	transport		*Transport
 	taskQueue 		chan *Task
+	responseQueue	chan *Msg
 }
 
 type LightNode struct {
@@ -48,6 +50,7 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 	dhtNode.successor = [2]string{dhtNode.contact.ip + ":" + dhtNode.contact.port, dhtNode.nodeId}
 	dhtNode.predecessor = [2]string{}
 	dhtNode.taskQueue = make(chan *Task)
+	dhtNode.responseQueue = make(chan *Msg)
 
 	//dhtNode.finger_table = &Finger_table{}
 	dhtNode.createTransport()
@@ -92,8 +95,6 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 
 
 	} else if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(msg.LightNode[1]))){
-		fmt.Println(msg.LightNode[1], " is between ", dhtNode.nodeId, " and ", dhtNode.successor[1])
-		fmt.Println("join with more nodes")
 		//changeDHTNodeSuccPred := createUpdatePSMsg("updatePred", msg.Key, msg.Src, dhtNode.successor[0])
 		changeNewNodeSucc := createUpdatePSMsg("updateSucc", msg.LightNode[0], [2]string{dhtNode.successor[0], dhtNode.successor[1]})
 		//changeNewNodeSucc := createUpdatePSMsg("updateSucc", dhtNode.successor[1], dhtNode.successor[0], msg.Src)
@@ -138,13 +139,14 @@ func (dhtNode *DHTNode) setPredecessor(msg *Msg){
 func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
 		dhtNode.successor[0] = msg.LightNode[0]
 		dhtNode.successor[1] = msg.LightNode[1]
-		fmt.Println(dhtNode.nodeId, " successor is ", dhtNode.successor)
 }
 
 
 // WTF
 func (dhtNode *DHTNode) getPredecessor(msg *Msg) {
-		m := createPredMsg(msg.Origin, msg.Src, dhtNode.predecessor)
+		m := createResponseMsg(msg.Dst, msg.Src, dhtNode.predecessor)
+		go func () { dhtNode.transport.send(m)} () 
+		
 		//myPred := &LightNode{dhtNode.predecessor[0], dhtNode.predecessor[1]}
 		//m := createPredMsg(msg.Origin, msg.Src, myPred)
 
@@ -154,24 +156,58 @@ func (dhtNode *DHTNode) getPredecessor(msg *Msg) {
 
 // responskö
 // periodically verify nodes immediate successor and tell the successor about node
-/*
+
+
 func (dhtNode *DHTNode) stabilize(){
-	n := 
-	//n := dhtNode.successor.predecessor
-	if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor.nodeId), []byte(n.nodeId))){
-		dhtNode.successor = n
+	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
+	getSuccPred := createGetNodeMsg("pred", nodeAddress, dhtNode.successor[0])
+	go func () { dhtNode.transport.send(getSuccPred)} () 
+	//send msg
+	waitResponse := time.NewTimer(time.Millisecond*2000)
+	for {
+		select {
+			case r := <- dhtNode.responseQueue:
+				fmt.Println("responseQueue")
+				if ((between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(r.LightNode[1]))) && r.LightNode[1] != "" ){
+					dhtNode.successor[0] = r.LightNode[0]
+					dhtNode.successor[1] = r.LightNode[1]
+					fmt.Println(dhtNode.successor)
+					return
+				}
+				
+				notify := createNotifyMsg(nodeAddress, dhtNode.successor[0], [2]string{nodeAddress, dhtNode.nodeId})
+
+				go func () { dhtNode.transport.send(notify)} () 
+				fmt.Println(dhtNode.successor[1], " ",  dhtNode.nodeId)
+				return
+
+			case t := <- waitResponse.C: //if timer is greater than 2000ms
+				//check if alive
+				fmt.Println(t, "successor timeout")
+				return
+		}
+		fmt.Println("wtf")
 	}
-	dhtNode.successor.notify(dhtNode)
+
+
+	//dhtNode.successor.notify(dhtNode)
+	//n := dhtNode.successor.predecessor
+
+}
+
+
+func (dhtNode *DHTNode) notify(msg *Msg){
+	fmt.Println(dhtNode.nodeId, " ", msg.LightNode)
+	if ((dhtNode.predecessor[0] == "") || between([]byte (dhtNode.predecessor[1]), []byte (dhtNode.nodeId), []byte (msg.LightNode[1]))){
+		dhtNode.predecessor[0] = msg.LightNode[0]
+		dhtNode.predecessor[1] = msg.LightNode[1]
+		fmt.Println(dhtNode.nodeId, " predecessor is ", dhtNode.predecessor)
+		//newPred := createUpdatePSMsg("updatePred")
+		//dhtNode.predecessor = node (msg.lightnode)
+	}
 }
 
 /*
-func (dhtNode *DHTNode) notify(node *DHTNode){
-	if ((dhtNode.predecessor == nil) || between([]byte (dhtNode.predecessor.nodeId), []byte (dhtNode.nodeId), []byte (node.nodeId))){
-		dhtNode.predecessor = node
-	}
-}
-
-
 func (dhtNode *DHTNode) findSuccessor(msg *Msg) string, string {
 		if (between([]byte(dhtNode.nodeId), byte[](msg.Key)) {
 			
@@ -258,9 +294,7 @@ func (dhtNode *DHTNode) init_taskQueue() {
 				case t := <-dhtNode.taskQueue:
 					switch t.taskType {
 						case "addToRing":
-							fmt.Println(dhtNode.nodeId, " adds ", t.msg.LightNode[1])
 							dhtNode.addToRing(t.msg)
-							fmt.Println("exit", dhtNode.nodeId)
 					}
 				}	
 			}		
