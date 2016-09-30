@@ -6,12 +6,19 @@ import (
 	//"fmt"
 	"testing"
 	"time"
+
 )
 
 // dhtNode sends request to master of ring: please add me somewhere
 func (dhtNode *DHTNode) joinReq(master *DHTNode) {
 	msg := createJoinMsg(master.transport.bindAddress, [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
 	go func () { dhtNode.transport.send(msg)}() 
+}
+
+// Master tells dhtNode to check who's responsible for key
+func (master *DHTNode) lookupReq(key string, dhtNode *DHTNode) {
+	m := createLookupMsg(master.transport.bindAddress, key, master.transport.bindAddress, dhtNode.transport.bindAddress)
+ 	go func () { dhtNode.transport.send(m)} () 	
 }
 
 func TestDHT1(t *testing.T) {
@@ -55,14 +62,15 @@ func TestDHT1(t *testing.T) {
 	node3.joinReq(node1)
 	node2.joinReq(node1)
 
-<<<<<<< HEAD
-	time.Sleep(100*time.Millisecond)
+
+/*
+	time.Sleep(10000*time.Millisecond)
 	msg := createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress)
 	go func () { node1.transport.send(msg)}() 
-=======
-	time.Sleep(time.Millisecond*1000)
-	node3.stabilize()
->>>>>>> origin/master
+*/
+	time.Sleep(10000*time.Millisecond)
+	node1.lookupReq("10", node5)
+
 
 	node0.transport.listen()
 

@@ -72,7 +72,16 @@ func (dhtNode *DHTNode) createTask(taskType string, msg *Msg) {
 func (dhtNode *DHTNode) startServer() {
 	fmt.Println("starting node ", dhtNode.nodeId)
 	go dhtNode.init_taskQueue()
-	go dhtNode.transport.listen()	
+	go dhtNode.stabilizeTimer()
+	go dhtNode.transport.listen()
+
+}
+
+func (dhtNode *DHTNode) stabilizeTimer() {
+	for {
+		time.Sleep(time.Millisecond*1000)
+		dhtNode.createTask("stabilize", nil)
+		}	
 }
 
 // JOIN
@@ -161,6 +170,7 @@ func (dhtNode *DHTNode) printRing(msg *Msg) {
 	
 }
 
+
 func (dhtNode *DHTNode) init_taskQueue() {
 	
 	go func() {
@@ -169,19 +179,17 @@ func (dhtNode *DHTNode) init_taskQueue() {
 				case t := <-dhtNode.taskQueue:
 					switch t.taskType {
 						case "addToRing":
-							fmt.Println(dhtNode.nodeId, " adds ", t.msg.LightNode[1])
 							dhtNode.addToRing(t.msg)
-							fmt.Println("exit", dhtNode.nodeId)
+						case "stabilize":
+							dhtNode.stabilize()
 					}
 				}	
 			}		
 		} ()
 }
 
-// responskö
+
 // periodically verify nodes immediate successor and tell the successor about node
-
-
 func (dhtNode *DHTNode) stabilize(){
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	getSuccPred := createGetNodeMsg("pred", nodeAddress, dhtNode.successor[0])
@@ -191,18 +199,16 @@ func (dhtNode *DHTNode) stabilize(){
 	for {
 		select {
 			case r := <- dhtNode.responseQueue:
-				fmt.Println("responseQueue")
 				if ((between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(r.LightNode[1]))) && r.LightNode[1] != "" ){
 					dhtNode.successor[0] = r.LightNode[0]
 					dhtNode.successor[1] = r.LightNode[1]
-					fmt.Println(dhtNode.successor)
 					return
 				}
 				
 				notify := createNotifyMsg(nodeAddress, dhtNode.successor[0], [2]string{nodeAddress, dhtNode.nodeId})
 
 				go func () { dhtNode.transport.send(notify)} () 
-				fmt.Println(dhtNode.successor[1], " ",  dhtNode.nodeId)
+				fmt.Println(dhtNode.nodeId, dhtNode.successor, dhtNode.predecessor)
 				return
 
 			case t := <- waitResponse.C: //if timer is greater than 2000ms
@@ -210,41 +216,33 @@ func (dhtNode *DHTNode) stabilize(){
 				fmt.Println(t, "successor timeout")
 				return
 		}
-		fmt.Println("wtf")
 	}
-
-
-	//dhtNode.successor.notify(dhtNode)
-	//n := dhtNode.successor.predecessor
 
 }
 
 
 func (dhtNode *DHTNode) notify(msg *Msg){
-	fmt.Println(dhtNode.nodeId, " ", msg.LightNode)
 	if ((dhtNode.predecessor[0] == "") || between([]byte (dhtNode.predecessor[1]), []byte (dhtNode.nodeId), []byte (msg.LightNode[1]))){
 		dhtNode.predecessor[0] = msg.LightNode[0]
 		dhtNode.predecessor[1] = msg.LightNode[1]
-		fmt.Println(dhtNode.nodeId, " predecessor is ", dhtNode.predecessor)
-		//newPred := createUpdatePSMsg("updatePred")
-		//dhtNode.predecessor = node (msg.lightnode)
 	}
 }
 
-/*
-func (dhtNode *DHTNode) findSuccessor(msg *Msg) string, string {
-		if (between([]byte(dhtNode.nodeId), byte[](msg.Key)) {
-			
-		}
 
-        if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor.nodeId), []byte(key))){
-		return dhtNode.successor
-        } else {
-                return dhtNode.successor.lookup(key)
-        }
+func (dhtNode *DHTNode) lookup(msg *Msg) {
+	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
+	if (between([]byte(dhtNode.nodeId),[]byte(dhtNode.successor[1]), []byte(msg.Key))) {
+		//m := createResponseMsg(nodeAddress, msg.origin, dhtNode.successor)
+		//go func () { dhtNode.transport.send(m)} () 
+		fmt.Println(dhtNode.successor, "is responsible for ", msg.Key)
+
+    } else {
+    	m := createLookupMsg(msg.Origin, msg.Key, nodeAddress, dhtNode.successor[0])
+ 		go func () { dhtNode.transport.send(m)} () 
+    }
 }
 
-
+/*
 func (dhtNode *DHTNode) acceleratedLookupUsingFingers(key string) *DHTNode {
 
 		fingerTable := dhtNode.finger_table.fingers
@@ -301,18 +299,4 @@ func (dhtNode *DHTNode) testCalcFingers(m int, bits int) {
 
 */
 
-func (dhtNode *DHTNode) init_taskQueue() {
-	
-	go func() {
-		for {
-			select {
-				case t := <-dhtNode.taskQueue:
-					switch t.taskType {
-						case "addToRing":
-							dhtNode.addToRing(t.msg)
-					}
-				}	
-			}		
-		} ()
-}
 

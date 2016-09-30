@@ -105,3 +105,15 @@ func createNotifyMsg(src, dst string, ln [2]string) *Msg{
 	Msg.Bytes = nil
 	return Msg
 }
+
+func createLookupMsg(origin, key, src, dst string) *Msg{
+	Msg := &Msg{}
+	Msg.Type = "lookup"
+	Msg.Origin = origin
+	Msg.Key = key
+	Msg.Src = src
+	Msg.Dst = dst
+	Msg.LightNode = [2]string{}
+	Msg.Bytes = nil
+	return Msg
+}

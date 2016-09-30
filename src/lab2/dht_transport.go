@@ -55,6 +55,8 @@ func (transport *Transport) init_msgQueue() {
 							transport.dhtNode.responseQueue <- m
 						case "notify":
 							transport.dhtNode.notify(m)
+						case "lookup":
+							transport.dhtNode.lookup(m)
 					}
 				}	
 			}		
