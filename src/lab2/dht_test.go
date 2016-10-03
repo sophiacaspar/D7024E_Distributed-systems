@@ -5,7 +5,7 @@ package dht
 import (
 	//"fmt"
 	"testing"
-	"time"
+	//"time"
 
 )
 
@@ -68,8 +68,10 @@ func TestDHT1(t *testing.T) {
 	msg := createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress)
 	go func () { node1.transport.send(msg)}() 
 */
-	time.Sleep(10000*time.Millisecond)
-	node1.lookupReq("10", node5)
+	//time.Sleep(5000*time.Millisecond)
+	//node1.lookupReq("10", node5)
+	//msg := createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress)
+	//go func () { node1.transport.send(msg)}() 
 
 
 	node0.transport.listen()

@@ -48,7 +48,7 @@ func (transport *Transport) init_msgQueue() {
 						case "updateSucc":
 							transport.dhtNode.setSuccessor(m)
 						case "printRing":
-							transport.dhtNode.printRing(m)
+							transport.dhtNode.createTask("printRing", m)
 						case "pred":
 							transport.dhtNode.getPredecessor(m)
 						case "response":
@@ -56,7 +56,11 @@ func (transport *Transport) init_msgQueue() {
 						case "notify":
 							transport.dhtNode.notify(m)
 						case "lookup":
-							transport.dhtNode.lookup(m)
+							go transport.dhtNode.lookup(m)
+						case "finger":
+							transport.dhtNode.createTask("updateFingers", m)
+						case "statFinger":
+							transport.dhtNode.setStaticFinger(m)
 					}
 				}	
 			}		
