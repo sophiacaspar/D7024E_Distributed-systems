@@ -13,8 +13,8 @@ type FingerTable struct {
 }
 
 type Finger struct {
-	Ip 		string 
-	Id 		string
+	ip 		string 
+	id 		string
 }
 
 func (dhtNode *DHTNode) setStaticFinger(msg *Msg) {
@@ -24,39 +24,39 @@ func (dhtNode *DHTNode) setStaticFinger(msg *Msg) {
 }
 
 func (dhtNode *DHTNode) updateFingers() {
+	
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	for i:=0; i < size; i++ {
+		response := false
 		idBytes, _ := hex.DecodeString(dhtNode.nodeId)
 		fingerHex, _ := calcFinger(idBytes, (i+1), size)
-		fmt.Println(fingerHex)
+		//fmt.Println(dhtNode.nodeId, " fingerhex is ", fingerHex)
 
 		if fingerHex == " " {
 			fingerHex = "00"	
 		} else{
-			m := createLookupMsg(nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0])
+
+			m := createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0])
 			go func () { dhtNode.transport.send(m)}() 
 
 			waitResponse := time.NewTimer(time.Millisecond*2000)
-			for {
+			for response != true{
 				select {
 					case r := <- dhtNode.responseQueue:
-
+						//fmt.Println(r.LightNode, "was responsible for ", fingerHex)
 						newFinger := &Finger{r.LightNode[0], r.LightNode[1]}
 						dhtNode.fingers.fingers[i] = newFinger
-						fmt.Println(dhtNode.nodeId, " fingers ", dhtNode.fingers)
-
-						return
+						response = true
 
 					case t := <- waitResponse.C: //if timer is greater than 2000ms
 						//check if alive
 						fmt.Println(t, "finger timeout")
-						return
+						response = true
 				}
 			}
 		}
-
 	}
-	return 
+
 }
 
 func (dhtNode *DHTNode) fingerTimer() {
@@ -65,3 +65,26 @@ func (dhtNode *DHTNode) fingerTimer() {
 		dhtNode.createTask("updateFingers", nil)
 	}	
 }
+
+
+func (dhtNode *DHTNode) printRingFingers(msg *Msg) {
+	if msg.Origin != msg.Dst {
+		fmt.Print(dhtNode.nodeId, " [ ")
+		dhtNode.printFingers()
+		fmt.Println("]")
+		msg := createPrintFingerMsg(msg.Origin, dhtNode.successor[0])
+		go func () { dhtNode.transport.send(msg)}() 
+	} else {
+		fmt.Print(dhtNode.nodeId, " [ ")
+		dhtNode.printFingers()
+		fmt.Println("]")
+	}
+
+}
+
+func (dhtNode *DHTNode) printFingers() {
+		for _, f := range dhtNode.fingers.fingers {
+			fmt.Print(f.id, " ")
+		}
+}
+

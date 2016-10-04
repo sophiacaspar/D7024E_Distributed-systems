@@ -70,6 +70,18 @@ func createPrintMsg(origin, dst string) *Msg{
 	return Msg
 }
 
+func createPrintFingerMsg(origin, dst string) *Msg{
+	Msg := &Msg{}
+	Msg.Type = "printFinger"
+	Msg.Origin = origin
+	Msg.Key = ""
+	Msg.Src = ""
+	Msg.Dst = dst
+	Msg.LightNode = [2]string{}
+	Msg.Bytes = nil
+	return Msg
+}
+
 func createResponseMsg(src, dst string, ln [2]string) *Msg{
 	Msg := &Msg{}
 	Msg.Type = "response"
@@ -106,9 +118,9 @@ func createNotifyMsg(src, dst string, ln [2]string) *Msg{
 	return Msg
 }
 
-func createLookupMsg(origin, key, src, dst string) *Msg{
+func createLookupMsg(t, origin, key, src, dst string) *Msg{
 	Msg := &Msg{}
-	Msg.Type = "lookup"
+	Msg.Type = t
 	Msg.Origin = origin
 	Msg.Key = key
 	Msg.Src = src

@@ -75,7 +75,7 @@ func (dhtNode *DHTNode) startServer() {
 
 func (dhtNode *DHTNode) stabilizeTimer() {
 	for {
-		time.Sleep(time.Millisecond*2000)
+		time.Sleep(time.Millisecond*1000)
 		dhtNode.createTask("stabilize", nil)
 		}	
 }
@@ -93,15 +93,6 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 		dhtNode.setStaticFinger(&Msg{"", "", "", "","", dhtNode.successor, nil})
 		f := createStatFingerMsg(nodeAddress, dhtNode.successor[0], [2]string{nodeAddress, dhtNode.nodeId})
 		go func () { dhtNode.transport.send(f)}() 
-	/*
-		for i:=0; i < size; i++ {
-			dhtNode.fingers.fingers[i] = &Finger{dhtNode.successor[0], dhtNode.successor[1]}
-		}
-*/
-		//fmt.Println(dhtNode.nodeId, " fingers: ", dhtNode.fingers)
-
-		//f1 := createFingerMsg(nodeAddress, msg.LightNode[0])
-		//go func () { dhtNode.transport.send(f1)}() 
 
 
 	} else if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(msg.LightNode[1]))){
@@ -115,20 +106,6 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 		f := createStatFingerMsg(nodeAddress, dhtNode.successor[0], [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
 		go func () { dhtNode.transport.send(f)}() 
 
-/*
-		for i:=0; i < size; i++ {
-			dhtNode.fingers.fingers[i] = &Finger{dhtNode.successor[0], dhtNode.successor[1]}
-		}
-*/
-
-		//f1 := createFingerMsg(nodeAddress, msg.LightNode[0])
-		//go func () { dhtNode.transport.send(f1)}() 
-
-		//dhtNode.successor.predecessor = newDHTNode
-		//newDHTNode.successor = n
-
-		//dhtNode.successor = newDHTNode
-		//newDHTNode.predecessor = dhtNode
 		
 	} else {
 		forwardToSucc := createJoinMsg(dhtNode.successor[0], msg.LightNode)
@@ -170,7 +147,6 @@ func (dhtNode *DHTNode) printRing(msg *Msg) {
 	} else {
 		fmt.Println("Pos origin:", msg.Origin)
 	}
-	
 }
 
 
@@ -180,6 +156,7 @@ func (dhtNode *DHTNode) init_taskQueue() {
 		for {
 			select {
 				case t := <-dhtNode.taskQueue:
+					//fmt.Println(dhtNode.nodeId, " task ", t.taskType)
 					switch t.taskType {
 						case "addToRing":
 							dhtNode.addToRing(t.msg)
@@ -213,9 +190,8 @@ func (dhtNode *DHTNode) stabilize(){
 				}
 				
 				notify := createNotifyMsg(nodeAddress, dhtNode.successor[0], [2]string{nodeAddress, dhtNode.nodeId})
-
 				go func () { dhtNode.transport.send(notify)} () 
-				fmt.Println(dhtNode.nodeId, dhtNode.successor, dhtNode.predecessor)
+				//fmt.Println(dhtNode.nodeId, dhtNode.successor, dhtNode.predecessor)
 				return
 
 			case t := <- waitResponse.C: //if timer is greater than 2000ms
@@ -241,31 +217,34 @@ func (dhtNode *DHTNode) lookup(msg *Msg) {
 	if (between([]byte(dhtNode.nodeId),[]byte(dhtNode.successor[1]), []byte(msg.Key))) {
 		m := createResponseMsg(nodeAddress, msg.Origin, dhtNode.successor)
 		go func () { dhtNode.transport.send(m)} () 
-		//fmt.Println(dhtNode.successor, "is responsible for ", msg.Key)
 
     } else {
-    	m := createLookupMsg(msg.Origin, msg.Key, nodeAddress, dhtNode.successor[0])
+    	m := createLookupMsg(msg.Type, msg.Origin, msg.Key, nodeAddress, dhtNode.successor[0])
  		go func () { dhtNode.transport.send(m)} () 
     }
 }
 
+
+func (dhtNode *DHTNode) fingerLookup(msg *Msg) {
+	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
+	fingerTable := dhtNode.fingers.fingers
+
+	for i := len(fingerTable); i > 0; i-- {
+		//fmt.Println(i)
+		fmt.Println("Checks if ", msg.Key, " is between ", dhtNode.nodeId, " and ", fingerTable[(i-1)].id)
+		if !(between([]byte(dhtNode.nodeId), []byte(fingerTable[(i-1)].id), []byte(msg.Key))){
+			m := createLookupMsg(msg.Type, msg.Origin, msg.Key, nodeAddress, fingerTable[(i-1)].ip)
+			go func () { dhtNode.transport.send(m)} () 
+			return
+			//return fingerTable[(i-1)].acceleratedLookupUsingFingers(key)
+		} 
+	}
+	fmt.Println(dhtNode.successor)
+	return
+	}
+
+
 /*
-func (dhtNode *DHTNode) acceleratedLookupUsingFingers(key string) *DHTNode {
-
-		fingerTable := dhtNode.finger_table.fingers
-
-		for i := len(fingerTable); i > 0; i-- {
-			fmt.Println(i)
-			fmt.Println("Checks if ", key, " is between ", dhtNode.nodeId, " and ", fingerTable[(i-1)].nodeId)
-			if !(between([]byte(dhtNode.nodeId), []byte(fingerTable[(i-1)].nodeId), []byte(key))){
-				return fingerTable[(i-1)].acceleratedLookupUsingFingers(key)
-			} 
-		}
-		return dhtNode.successor
-		}
-
-
-
 func (dhtNode *DHTNode) responsible(key string) bool {
 	// TODO
 	return false
@@ -275,22 +254,6 @@ func (dhtNode *DHTNode) responsible(key string) bool {
 */
 
 /**
-func (dhtNode *DHTNode) printRingFingers() {
-	fmt.Print(dhtNode.nodeId, " [ ")
-	dhtNode.printFingers()
-	fmt.Println("]")
-	for i := dhtNode.successor; i != dhtNode; i = i.successor {
-		fmt.Print(i.nodeId, " [ ")
-		i.printFingers()
-		fmt.Println("]")
-	}
-}
-
-func (dhtNode *DHTNode) printFingers() {
-		for _, f := range dhtNode.finger_table.fingers {
-			fmt.Print(f.nodeId, " ")
-		}
-}
 
 
 func (dhtNode *DHTNode) testCalcFingers(m int, bits int) {
