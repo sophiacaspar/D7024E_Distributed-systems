@@ -73,8 +73,10 @@ func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 		newDHTNode.successor = n
 		dhtNode.successor = newDHTNode
 		newDHTNode.predecessor = dhtNode
+		newDHTNode.stabilize()
 		newDHTNode.finger_table.fingers = init_finger_table(newDHTNode)
 		dhtNode.update_fingers()
+		
 		
 		//fmt.Print(dhtNode.nodeId)
 		//fmt.Println(dhtNode.finger_table.fingers)
@@ -92,6 +94,7 @@ func (dhtNode *DHTNode) stabilize(){
 	if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor.nodeId), []byte(n.nodeId))){
 		dhtNode.successor = n
 	}
+
 	dhtNode.successor.notify(dhtNode)
 }
 

@@ -7,7 +7,7 @@ import (
 	"fmt"
 	)
 
-const size int = 160
+const size int = 3
 
 type FingerTable struct {
 	fingers 	[size]*Finger
@@ -51,7 +51,7 @@ func (dhtNode *DHTNode) updateFingers() {
 
 					case t := <- waitResponse.C: //if timer is greater than 2000ms
 						//check if alive
-						fmt.Println(t, "finger timeout")
+						fmt.Println(t, "finger timeout,", dhtNode.nodeId,"is searching for ",fingerHex)
 						response = true
 				}
 			}

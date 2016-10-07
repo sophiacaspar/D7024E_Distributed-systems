@@ -5,7 +5,7 @@ package dht
 import (
 	//"fmt"
 	"testing"
-	//"time"
+	"time"
 
 )
 
@@ -22,7 +22,7 @@ func (master *DHTNode) lookupReq(t, key string, dhtNode *DHTNode) {
 }
 
 func TestDHT1(t *testing.T) {
-/*
+
 	id0 := "00"
     id1 := "01"
     id2 := "02"
@@ -40,7 +40,7 @@ func TestDHT1(t *testing.T) {
     node5 := makeDHTNode(&id5, "localhost", "1115")
     node6 := makeDHTNode(&id6, "localhost", "1116")
     node7 := makeDHTNode(&id7, "localhost", "1117")
-    */
+ /*
 
     node0 := makeDHTNode(nil, "localhost", "1110")
     node1 := makeDHTNode(nil, "localhost", "1111")
@@ -50,6 +50,7 @@ func TestDHT1(t *testing.T) {
     node5 := makeDHTNode(nil, "localhost", "1115")
     node6 := makeDHTNode(nil, "localhost", "1116")
     node7 := makeDHTNode(nil, "localhost", "1117")
+*/
 
 	node1.startServer()
 	node2.startServer()
@@ -65,6 +66,9 @@ func TestDHT1(t *testing.T) {
 	node4.joinReq(node1)
 	node3.joinReq(node1)
 	node2.joinReq(node1)
+
+	time.Sleep(10000*time.Millisecond)
+	node3.kill()
 
 /*
 	time.Sleep(10000*time.Millisecond)
