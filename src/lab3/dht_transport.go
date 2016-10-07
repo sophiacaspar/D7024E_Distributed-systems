@@ -23,8 +23,9 @@ func (transport *Transport) listen() {
 
 	defer conn.Close()
 	dec := json.NewDecoder(conn)
+
 	for {
-		if transport.dhtNode.online != false {
+		if transport.dhtNode.online {
 			msg := Msg{}
 			err = dec.Decode(&msg)
 			go func() { transport.msgQueue <- &msg } ()
@@ -39,6 +40,7 @@ func (transport *Transport) init_msgQueue() {
 		for {
 			select {
 				case m := <-transport.msgQueue:
+					//fmt.Println(transport.dhtNode.nodeId, m.Type)
 					switch m.Type {
 						case "addToRing":
 							transport.dhtNode.createTask("addToRing", m)
@@ -75,7 +77,7 @@ func (transport *Transport) init_msgQueue() {
 }
 
 func (transport *Transport) send(msg *Msg) {
-	if transport.dhtNode.online != false {
+	if transport.dhtNode.online {
 		udpAddr, err := net.ResolveUDPAddr("udp", msg.Dst)
 
 		conn, err := net.DialUDP("udp", nil, udpAddr)

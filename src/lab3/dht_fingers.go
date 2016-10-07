@@ -36,7 +36,6 @@ func (dhtNode *DHTNode) updateFingers() {
 		if fingerHex == " " {
 			fingerHex = "00"	
 		} else{
-
 			m := createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0])
 			go func () { dhtNode.transport.send(m)}() 
 

@@ -70,9 +70,9 @@ func TestDHT1(t *testing.T) {
 	time.Sleep(10000*time.Millisecond)
 	node3.kill()
 
-/*
-	time.Sleep(10000*time.Millisecond)
-	msg := createPrintFingerMsg(node2.transport.bindAddress, node3.transport.bindAddress)
+
+	time.Sleep(15000*time.Millisecond)
+	msg := createPrintFingerMsg(node4.transport.bindAddress, node5.transport.bindAddress)
 	go func () { node2.transport.send(msg)}() 
 
 
