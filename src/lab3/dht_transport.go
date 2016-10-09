@@ -35,39 +35,45 @@ func (transport *Transport) listen() {
 }
 
 func (transport *Transport) init_msgQueue() {
-	
 	go func() {
 		for {
 			select {
 				case m := <-transport.msgQueue:
-					//fmt.Println(transport.dhtNode.nodeId, m.Type)
+					fmt.Println(transport.bindAddress, m.Type)
 					switch m.Type {
 						case "addToRing":
 							transport.dhtNode.createTask("addToRing", m)
 						case "updatePred":
-							transport.dhtNode.setPredecessor(m)
+							go transport.dhtNode.setPredecessor(m)
 						case "updateSucc":
-							transport.dhtNode.setSuccessor(m)
+							go transport.dhtNode.setSuccessor(m)
 						case "printRing":
 							transport.dhtNode.createTask("printRing", m)
 						case "printFinger":
-							transport.dhtNode.printRingFingers(m)
+							go transport.dhtNode.createTask("printRingFingers",m)
 						case "pred":
-							transport.dhtNode.getPredecessor(m)
+							go transport.dhtNode.getPredecessor(m)
 						case "response":
 							transport.dhtNode.responseQueue <- m
 						case "notify":
-							transport.dhtNode.notify(m)
+							go transport.dhtNode.notify(m)
+							//transport.dhtNode.createTask("notify",m)
 						case "lookup":
+							//go transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))
+							//fmt.Println(transport.bindAddress, "lookup", m.Key)
 							go transport.dhtNode.lookup(m)
+						case "lookupFound":
+							transport.dhtNode.fingerMemory <- &Finger{m.LightNode[0], m.LightNode[1]}
 						case "fingerLookup":
 							go transport.dhtNode.fingerLookup(m)
 						case "finger":
 							transport.dhtNode.createTask("updateFingers", m)
-						case "statFinger":
-							transport.dhtNode.setStaticFinger(m)
+						case "initFinger":
+							go transport.dhtNode.initFingerTable(m)
 						case "heartbeat":
-							go func () { transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))} ()
+							//transport.dhtNode.heartbeatQueue <- (createAckMsg(m.Dst, m.Origin))
+							//go func () { transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))} ()
+							transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))
 						case "ack":
 							transport.dhtNode.responseQueue <- m
 					}

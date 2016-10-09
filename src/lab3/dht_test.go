@@ -13,6 +13,7 @@ import (
 func (dhtNode *DHTNode) joinReq(master *DHTNode) {
 	msg := createJoinMsg(master.transport.bindAddress, [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
 	go func () { dhtNode.transport.send(msg)}() 
+	time.Sleep(time.Millisecond*500)
 }
 
 // Master tells dhtNode to check who's responsible for key
@@ -22,7 +23,7 @@ func (master *DHTNode) lookupReq(t, key string, dhtNode *DHTNode) {
 }
 
 func TestDHT1(t *testing.T) {
-
+/*
 	id0 := "00"
     id1 := "01"
     id2 := "02"
@@ -40,7 +41,7 @@ func TestDHT1(t *testing.T) {
     node5 := makeDHTNode(&id5, "localhost", "1115")
     node6 := makeDHTNode(&id6, "localhost", "1116")
     node7 := makeDHTNode(&id7, "localhost", "1117")
- /*
+ */
 
     node0 := makeDHTNode(nil, "localhost", "1110")
     node1 := makeDHTNode(nil, "localhost", "1111")
@@ -50,7 +51,7 @@ func TestDHT1(t *testing.T) {
     node5 := makeDHTNode(nil, "localhost", "1115")
     node6 := makeDHTNode(nil, "localhost", "1116")
     node7 := makeDHTNode(nil, "localhost", "1117")
-*/
+
 
 	node1.startServer()
 	node2.startServer()
@@ -67,25 +68,29 @@ func TestDHT1(t *testing.T) {
 	node3.joinReq(node1)
 	node2.joinReq(node1)
 
-	time.Sleep(10000*time.Millisecond)
+/*
+	time.Sleep(7000*time.Millisecond)
 	node3.kill()
+*/
+
+	//time.Sleep(10000*time.Millisecond)
+	//msg := createPrintFingerMsg(node4.transport.bindAddress, node5.transport.bindAddress)
+	//go func () { node4.transport.send(msg)}() 
 
 
-	time.Sleep(15000*time.Millisecond)
-	msg := createPrintFingerMsg(node4.transport.bindAddress, node5.transport.bindAddress)
-	go func () { node2.transport.send(msg)}() 
 
 
+
+	//time.Sleep(10000*time.Millisecond)
+	//node2.lookup("04")
+	//msg := createPrintMsg(node7.transport.bindAddress, node1.transport.bindAddress)
+	//go func () { node1.createTask("printRing", createPrintMsg(node1.transport.bindAddress, node2.transport.bindAddress))}() 
 
 
 /*
-	time.Sleep(10000*time.Millisecond)
-	msg := createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress)
-	go func () { node1.transport.send(msg)}() 
-
-	time.Sleep(5000*time.Millisecond)
+	time.Sleep(7000*time.Millisecond)
 	node1.lookupReq("fingerLookup", "10", node5)
-
+/*
 	//msg := createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress)
 	//go func () { node1.transport.send(msg)}() 
 */

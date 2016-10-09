@@ -130,6 +130,18 @@ func createLookupMsg(t, origin, key, src, dst string) *Msg{
 	return Msg
 }
 
+func createLookupFoundMsg(origin, dst string, node [2]string) *Msg{
+	Msg := &Msg{}
+	Msg.Type = "lookupFound"
+	Msg.Origin = origin
+	Msg.Key = ""
+	Msg.Src = ""
+	Msg.Dst = dst
+	Msg.LightNode = node
+	Msg.Data = nil
+	return Msg
+}
+
 func createFingerMsg(src, dst string) *Msg{
 	Msg := &Msg{}
 	Msg.Type = "finger"
@@ -142,9 +154,9 @@ func createFingerMsg(src, dst string) *Msg{
 	return Msg
 }
 
-func createStatFingerMsg(src, dst string, finger [2]string) *Msg{
+func createInitFingerMsg(src, dst string, finger [2]string) *Msg{
 	Msg := &Msg{}
-	Msg.Type = "statFinger"
+	Msg.Type = "initFinger"
 	Msg.Origin = ""
 	Msg.Key = ""
 	Msg.Src = src
