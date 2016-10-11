@@ -39,7 +39,7 @@ func (transport *Transport) init_msgQueue() {
 		for {
 			select {
 				case m := <-transport.msgQueue:
-					fmt.Println(transport.bindAddress, m.Type)
+					//fmt.Println(transport.bindAddress, m.Type)
 					switch m.Type {
 						case "addToRing":
 							transport.dhtNode.createTask("addToRing", m)

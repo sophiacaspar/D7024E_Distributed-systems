@@ -24,7 +24,7 @@ func (dhtNode *DHTNode) initFingerTable(msg *Msg) {
 		}
 }
 
-func (dhtNode *DHTNode) updateFingers () {
+func (dhtNode *DHTNode) updateFingers() {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	var response = false
 	for i := 0; i < size; i++ {
@@ -37,26 +37,16 @@ func (dhtNode *DHTNode) updateFingers () {
 				fingerHex = "00"
 			}	
 			go dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0]))
-/*
-			if i == 0 {
-				//dhtNode.transport.send(createMsg("lookup", fingerHex, src, dhtNode.fingers.fingerList[i].address, src))
-				//go dhtNode.lookup(fingerHex)
-				dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0]))
-				//return
-			} else {
-				//dhtNode.transport.send(createLookupMsg("lookup", fingerHex, src, dhtNode.fingers.fingers[i-1].address, src))
-				dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.fingers.fingers[(i-1)].ip))
-			}
-			*/
-			waitRespons := time.NewTimer(time.Millisecond * 1000)
+
+			waitResponse := time.NewTimer(time.Millisecond * 500)
 			for response != true {
 				select {
 				case s := <-dhtNode.fingerMemory:
 					dhtNode.fingers.fingers[i] = s
-					fmt.Println(dhtNode.contact.port, "added finger", (i+1), s.ip)
+					//fmt.Println(dhtNode.contact.port, "added finger", (i+1), s.ip)
 					response = true
-				case <-waitRespons.C:
-					fmt.Println("finger timeout,", dhtNode.contact.ip,"is searching for ",fingerHex)
+				case <-waitResponse.C:
+					fmt.Println("finger timeout,", dhtNode.contact.port,"is searching for ",fingerHex)
 					//fmt.Print("(CALLED FROM FINGERS) waiting respons from: ")
 					//fmt.Println(dhtNode.fingers.fingerList[i-0].address)
 					response = true
@@ -65,7 +55,6 @@ func (dhtNode *DHTNode) updateFingers () {
 				}
 			}
 			response = false
-
 		}
 	}
 }
@@ -73,7 +62,6 @@ func (dhtNode *DHTNode) updateFingers () {
 func (dhtNode *DHTNode) fingerTimer() {
 	for {
 		time.Sleep(time.Millisecond*7300)
-		fmt.Println("\n############ STABILIZING FINGERS FOR", dhtNode.nodeId,"###############")
 		dhtNode.createTask("updateFingers", nil)
 	}	
 }
