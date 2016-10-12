@@ -40,12 +40,13 @@ func (transport *Transport) init_msgQueue() {
 			select {
 				case m := <-transport.msgQueue:
 					//fmt.Println(transport.bindAddress, m.Type)
+					if transport.dhtNode.online {
 					switch m.Type {
 						case "addToRing":
 							transport.dhtNode.createTask("addToRing", m)
-						case "updatePred":
+						case "setPred":
 							go transport.dhtNode.setPredecessor(m)
-						case "updateSucc":
+						case "setSucc":
 							go transport.dhtNode.setSuccessor(m)
 						case "printRing":
 							transport.dhtNode.createTask("printRing", m)
@@ -59,10 +60,9 @@ func (transport *Transport) init_msgQueue() {
 							go transport.dhtNode.notify(m)
 							//transport.dhtNode.createTask("notify",m)
 						case "lookup":
-							//go transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))
-							//fmt.Println(transport.bindAddress, "lookup", m.Key)
 							go transport.dhtNode.lookup(m)
 						case "lookupFound":
+							transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))
 							transport.dhtNode.fingerMemory <- &Finger{m.LightNode[0], m.LightNode[1]}
 						case "fingerLookup":
 							go transport.dhtNode.fingerLookup(m)
@@ -70,15 +70,22 @@ func (transport *Transport) init_msgQueue() {
 							transport.dhtNode.createTask("updateFingers", m)
 						case "initFinger":
 							go transport.dhtNode.initFingerTable(m)
+						case "checkFinger":
+							transport.dhtNode.transport.send(createResponseMsg(m.Dst, m.Origin, [2]string{transport.bindAddress, transport.dhtNode.nodeId}))
 						case "heartbeat":
 							//transport.dhtNode.heartbeatQueue <- (createAckMsg(m.Dst, m.Origin))
 							//go func () { transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))} ()
-							transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))
+							transport.dhtNode.transport.send(createHeartbeatAnswer(m.Dst, m.Origin))
+						case "heartbeatAnswer":
+							transport.dhtNode.heartbeatQueue <- m
+						case "isAlive":
+							transport.dhtNode.transport.send(createResponseMsg(m.Dst, m.Origin, [2]string{transport.bindAddress, transport.dhtNode.nodeId}))
 						case "ack":
 							transport.dhtNode.responseQueue <- m
 					}
-				}	
-			}		
+				} 
+			}
+			}	
 		} ()
 }
 

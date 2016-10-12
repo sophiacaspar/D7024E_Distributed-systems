@@ -3,7 +3,7 @@ package dht
 /** go test -test.run TestDHT1 */
 
 import (
-	//"fmt"
+	"fmt"
 	"testing"
 	"time"
 
@@ -62,24 +62,31 @@ func TestDHT1(t *testing.T) {
     node7 := startNode(nil, "1117")
 
 
-	node7.joinReq(node1)
 	node6.joinReq(node1)
 	node5.joinReq(node1)
-	node4.joinReq(node1)
+	node7.joinReq(node1)
 	node3.joinReq(node1)
 	node2.joinReq(node1)
 	node0.joinReq(node1)
+	node4.joinReq(node1)
 
+	fmt.Print("")
+	time.Sleep(10000*time.Millisecond)
+	
+	node3.printMyFingers()
+	//fmt.Println("#####################", node3.responsible("bf06670af35ed4abcadd95abe8079568f4df38e6"), "#####################")
+	node3.kill()
 
-	//time.Sleep(7000*time.Millisecond)
-	//node3.kill()
+	time.Sleep(1000*time.Millisecond)
 
+	
+	//node0.kill()
 	//time.Sleep(10000*time.Millisecond)
 	//msg := createPrintMsg(node7.transport.bindAddress, node1.transport.bindAddress)
 	//go func () { node2.createTask("printRing", createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress))}()
 
-	time.Sleep(2000*time.Second)
-/*	fmt.Println("#####################", node1.responsible(node1.nodeId), "#####################")
+	
+/*	fmt.Println("#####################", node3.responsible(bf06670af35ed4abcadd95abe8079568f4df38e6), "#####################")
 */
 /*
 	time.Sleep(10000*time.Millisecond)
@@ -104,5 +111,5 @@ func TestDHT1(t *testing.T) {
 */
 
 	//node0.transport.listen()
-
+	time.Sleep(200000*time.Second)
 }

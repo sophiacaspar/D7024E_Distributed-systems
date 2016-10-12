@@ -46,7 +46,7 @@ func createJoinMsg(dst string, newNodeInfo [2]string) *Msg {
 	return Msg
 }
 
-func createUpdatePSMsg(t, dst string, newNodeInfo [2]string) *Msg{
+func createSetPreSuccMsg(t, dst string, newNodeInfo [2]string) *Msg{
 	Msg := &Msg{}
 	Msg.Type = t
 	Msg.Origin = ""
@@ -94,12 +94,12 @@ func createResponseMsg(src, dst string, ln [2]string) *Msg{
 	return Msg
 }
 
-func createGetNodeMsg(t, src, dst string) *Msg{
+func createGetNodeMsg(t, origin, dst string) *Msg{
 	Msg := &Msg{}
 	Msg.Type = t
-	Msg.Origin = ""
+	Msg.Origin = origin
 	Msg.Key = ""
-	Msg.Src = src
+	Msg.Src = ""
 	Msg.Dst = dst
 	Msg.LightNode = [2]string{}
 	Msg.Data = nil
@@ -169,6 +169,30 @@ func createInitFingerMsg(src, dst string, finger [2]string) *Msg{
 func createHeartbeatMsg(origin, dst string) *Msg{
 	Msg := &Msg{}
 	Msg.Type = "heartbeat"
+	Msg.Origin = origin
+	Msg.Key = ""
+	Msg.Src = ""
+	Msg.Dst = dst
+	Msg.LightNode = [2]string{}
+	Msg.Data = nil
+	return Msg
+}
+
+func createHeartbeatAnswer(origin, dst string) *Msg{
+	Msg := &Msg{}
+	Msg.Type = "heartbeatAnswer"
+	Msg.Origin = origin
+	Msg.Key = ""
+	Msg.Src = ""
+	Msg.Dst = dst
+	Msg.LightNode = [2]string{}
+	Msg.Data = nil
+	return Msg
+}
+
+func createAliveMsg(origin, dst string) *Msg{
+	Msg := &Msg{}
+	Msg.Type = "isAlive"
 	Msg.Origin = origin
 	Msg.Key = ""
 	Msg.Src = ""
