@@ -25,7 +25,6 @@ func (dhtNode *DHTNode) initFingerTable(msg *Msg) {
 }
 
 func (dhtNode *DHTNode) updateFingers() {
-	fmt.Println(dhtNode.contact.port, "init undate fingers")
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	var response = false
 	for i := 0; i < size; i++ {
@@ -62,12 +61,19 @@ func (dhtNode *DHTNode) updateFingers() {
 
 func (dhtNode *DHTNode) fingerTimer() {
 	for {
-		time.Sleep(time.Millisecond*7300)
-		dhtNode.createTask("updateFingers", nil)
+		if dhtNode.online {
+			time.Sleep(time.Millisecond*7300)
+			dhtNode.createTask("updateFingers", nil)
+		} else {
+			return
+		}
 	}	
 }
 
 
+/*********************************************
+**** PRINTS FINGERS WITH DIFFERENT OUTPUTS ***
+*********************************************/
 func (dhtNode *DHTNode) printRingFingers(msg *Msg) {
 	if msg.Origin != msg.Dst {
 		fmt.Print(dhtNode.nodeId, " [ ")

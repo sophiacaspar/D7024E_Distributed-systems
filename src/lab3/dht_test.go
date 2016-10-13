@@ -77,7 +77,6 @@ func TestDHT1(t *testing.T) {
 	node3.kill()
 
 	time.Sleep(10000*time.Millisecond)
-	fmt.Println("hej")
 
 	
 	//node0.kill()

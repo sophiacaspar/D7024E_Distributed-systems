@@ -29,7 +29,7 @@ func (transport *Transport) listen() {
 			msg := Msg{}
 			err = dec.Decode(&msg)
 			go func() { transport.msgQueue <- &msg } ()
-		}
+		} else{return}
 
 	}
 }
@@ -52,21 +52,24 @@ func (transport *Transport) init_msgQueue() {
 						case "printFinger":
 							go transport.dhtNode.createTask("printRingFingers",m)
 						case "pred":
-							go transport.dhtNode.getPredecessor(m)
+							go transport.dhtNode.getPredecessor(m)	
 						case "response":
 							transport.dhtNode.responseQueue <- m
 						case "notify":
 							go transport.dhtNode.notify(m)
 							//transport.dhtNode.createTask("notify",m)
 						case "lookup":
-							go transport.dhtNode.lookup(m)
+							go transport.dhtNode.transport.send(createAckMsg("lookupAck", m.Dst, m.Src))
+							go transport.dhtNode.lookupNext(m)
 						case "lookupFound":
-							transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))
-							transport.dhtNode.fingerMemory <- &Finger{m.LightNode[0], m.LightNode[1]}
+							//transport.dhtNode.transport.send(createAckMsg("lookupAck", m.Dst, m.Origin))
+							go func(){
+								transport.dhtNode.fingerMemory <- &Finger{m.LightNode[0], m.LightNode[1]}	
+							}()
 						case "fingerLookup":
 							go transport.dhtNode.fingerLookup(m)
 						case "finger":
-							transport.dhtNode.createTask("updateFingers", m)
+							go transport.dhtNode.createTask("updateFingers", m)
 						case "initFinger":
 							go transport.dhtNode.initFingerTable(m)
 						case "checkFinger":
@@ -78,13 +81,21 @@ func (transport *Transport) init_msgQueue() {
 								transport.dhtNode.transport.send(createHeartbeatAnswer(m.Dst, m.Origin))
 							} 
 						case "heartbeatAnswer":
-							transport.dhtNode.heartbeatQueue <- m
+							go func(){
+									transport.dhtNode.heartbeatQueue <- m
+								}()
+							
 						case "isAlive":
 							if transport.dhtNode.online {
 								transport.dhtNode.transport.send(createResponseMsg(m.Dst, m.Origin, [2]string{transport.bindAddress, transport.dhtNode.nodeId}))
 							}
 						case "ack":
 							transport.dhtNode.responseQueue <- m
+						case "lookupAck":
+							go func(){
+								transport.dhtNode.lookupQueue <- m	
+							}()
+							
 					}
 				} 
 			}	
@@ -104,6 +115,6 @@ func (transport *Transport) send(msg *Msg) {
 		defer conn.Close()
 
 		_, err = conn.Write(bytes)
-	}
+	} 
 }
 

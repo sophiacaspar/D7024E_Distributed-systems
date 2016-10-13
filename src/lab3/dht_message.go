@@ -22,9 +22,9 @@ func createMessage(t, origin, key, src, dst string, ln [2]string, bytes []byte) 
 	return Msg
 }
 
-func createAckMsg(src, dst string) *Msg{
+func createAckMsg(t, src, dst string) *Msg{
 	Msg := &Msg{}
-	Msg.Type = "ack"
+	Msg.Type = t
 	Msg.Origin = ""
 	Msg.Key = ""
 	Msg.Src = src
