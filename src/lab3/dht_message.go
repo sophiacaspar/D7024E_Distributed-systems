@@ -190,17 +190,7 @@ func createHeartbeatAnswer(origin, dst string) *Msg{
 	return Msg
 }
 
-func createAliveMsg(origin, dst string) *Msg{
-	Msg := &Msg{}
-	Msg.Type = "isAlive"
-	Msg.Origin = origin
-	Msg.Key = ""
-	Msg.Src = ""
-	Msg.Dst = dst
-	Msg.LightNode = [2]string{}
-	Msg.Data = nil
-	return Msg
-}
+
 
 
 

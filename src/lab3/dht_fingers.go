@@ -25,6 +25,7 @@ func (dhtNode *DHTNode) initFingerTable(msg *Msg) {
 }
 
 func (dhtNode *DHTNode) updateFingers() {
+	fmt.Println(dhtNode.contact.port, "init undate fingers")
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	var response = false
 	for i := 0; i < size; i++ {
@@ -42,11 +43,10 @@ func (dhtNode *DHTNode) updateFingers() {
 				select {
 				case s := <-dhtNode.fingerMemory:
 					dhtNode.fingers.fingers[i] = s
-					//fmt.Println(dhtNode.contact.port, "added finger", (i+1), s.ip)
+					//fmt.Println(dhtNode.contact.port, "added finger", (i+1), s.ip, "figerhex", fingerHex)
 					response = true
 				case <-waitResponse.C:
 					fmt.Println("finger timeout,", dhtNode.contact.port,"is searching for ",fingerHex)
-					go dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.fingers.fingers[1].ip))
 					response = true
 				//default:
 				//	fmt.Println("when you try your best but don't succeed")
@@ -58,6 +58,7 @@ func (dhtNode *DHTNode) updateFingers() {
 	}
 
 }
+
 
 func (dhtNode *DHTNode) fingerTimer() {
 	for {

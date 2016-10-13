@@ -51,7 +51,7 @@ func TestDHT1(t *testing.T) {
     node7 := startNode(&id7, "1117")
 */
 
-   
+ 
 	node0 := startNode(nil, "1110")
     node1 := startNode(nil, "1111")
     node2 := startNode(nil, "1112")
@@ -60,7 +60,6 @@ func TestDHT1(t *testing.T) {
     node5 := startNode(nil, "1115")
     node6 := startNode(nil, "1116")
     node7 := startNode(nil, "1117")
-
 
 	node6.joinReq(node1)
 	node5.joinReq(node1)
@@ -73,11 +72,12 @@ func TestDHT1(t *testing.T) {
 	fmt.Print("")
 	time.Sleep(10000*time.Millisecond)
 	
-	node3.printMyFingers()
+	//node3.printMyFingers()
 	//fmt.Println("#####################", node3.responsible("bf06670af35ed4abcadd95abe8079568f4df38e6"), "#####################")
 	node3.kill()
 
-	time.Sleep(1000*time.Millisecond)
+	time.Sleep(10000*time.Millisecond)
+	fmt.Println("hej")
 
 	
 	//node0.kill()
@@ -111,5 +111,5 @@ func TestDHT1(t *testing.T) {
 */
 
 	//node0.transport.listen()
-	time.Sleep(200000*time.Second)
+	time.Sleep(2000*time.Second)
 }

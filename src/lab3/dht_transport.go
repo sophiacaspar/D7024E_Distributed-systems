@@ -40,7 +40,6 @@ func (transport *Transport) init_msgQueue() {
 			select {
 				case m := <-transport.msgQueue:
 					//fmt.Println(transport.bindAddress, m.Type)
-					if transport.dhtNode.online {
 					switch m.Type {
 						case "addToRing":
 							transport.dhtNode.createTask("addToRing", m)
@@ -75,16 +74,19 @@ func (transport *Transport) init_msgQueue() {
 						case "heartbeat":
 							//transport.dhtNode.heartbeatQueue <- (createAckMsg(m.Dst, m.Origin))
 							//go func () { transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))} ()
-							transport.dhtNode.transport.send(createHeartbeatAnswer(m.Dst, m.Origin))
+							if transport.dhtNode.online {
+								transport.dhtNode.transport.send(createHeartbeatAnswer(m.Dst, m.Origin))
+							} 
 						case "heartbeatAnswer":
 							transport.dhtNode.heartbeatQueue <- m
 						case "isAlive":
-							transport.dhtNode.transport.send(createResponseMsg(m.Dst, m.Origin, [2]string{transport.bindAddress, transport.dhtNode.nodeId}))
+							if transport.dhtNode.online {
+								transport.dhtNode.transport.send(createResponseMsg(m.Dst, m.Origin, [2]string{transport.bindAddress, transport.dhtNode.nodeId}))
+							}
 						case "ack":
 							transport.dhtNode.responseQueue <- m
 					}
 				} 
-			}
 			}	
 		} ()
 }
