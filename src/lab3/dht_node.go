@@ -422,6 +422,7 @@ func (dhtNode *DHTNode) revive() {
 		fmt.Println("<<<<<<<<<<<<<<<<<<<<<<",dhtNode.contact.port, "IS ALIVE <<<<<<<<<<<<<<<<<<<<<<")
 		dhtNode.online = true
 		dhtNode.startServer()
+		
 	} 
 }
 
