@@ -127,7 +127,6 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 	} else {
 		forwardToSucc := createJoinMsg(dhtNode.successor[0], msg.LightNode)
 		go func () { dhtNode.transport.send(forwardToSucc)} () 
-		//n.addToRing(newDHTNode)
 	}
 }
 
@@ -216,16 +215,14 @@ func (dhtNode *DHTNode) stabilize(){
 				// I think I am your predecessor, update!
 				notify := createNotifyMsg(nodeAddress, dhtNode.successor[0], [2]string{nodeAddress, dhtNode.nodeId})
 				go dhtNode.transport.send(notify)
-				
-				//fmt.Println(dhtNode.nodeId, dhtNode.successor, dhtNode.predecessor)
 				return
 		// if we get no response, search for a finger that is alive to put as successor
 			case <- waitResponse.C:
 				//check if alive
 				fmt.Println("xxxxxxxxxxxxxx  stabilize timeout", dhtNode.contact.port,  "xxxxxxxxxxxxxx")
-				//dhtNode.updateSuccessor(dhtNode.successor[1])
-				dhtNode.successor[0] = dhtNode.fingers.fingers[(size-1)].ip
-				dhtNode.successor[1] = dhtNode.fingers.fingers[(size-1)].id
+				dhtNode.updateSuccessor(dhtNode.successor[1])
+				//dhtNode.successor[0] = dhtNode.fingers.fingers[(size-1)].ip
+				//dhtNode.successor[1] = dhtNode.fingers.fingers[(size-1)].id
 				return
 		}
 	} 
@@ -252,7 +249,6 @@ func (dhtNode *DHTNode) updateSuccessor(id string) {
 			break
 		}
 	}
-
 	waitResponse := time.NewTimer(time.Millisecond * 500)
 	for {
 		select {
@@ -260,11 +256,9 @@ func (dhtNode *DHTNode) updateSuccessor(id string) {
 				dhtNode.successor[0] = k.ip
 				dhtNode.successor[1] = k.id
 				fmt.Println(dhtNode.contact.port, "Successor updated to", dhtNode.successor[0])
-
 				notify := createNotifyMsg(nodeAddress, k.ip, [2]string{nodeAddress, dhtNode.nodeId})
 				go dhtNode.transport.send(notify)
 
-				//dhtNode.successor = r.LightNode
 				return
 			case <-waitResponse.C:
 				dhtNode.updateSuccessor(k.id)
@@ -304,7 +298,7 @@ func (dhtNode *DHTNode) lookupNext(msg *Msg) {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	var m *Msg
 	//fmt.Println("is", dhtNode.contact.port, "responsible for", msg.Key)
-	waitResponse := time.NewTimer(time.Millisecond * 500)
+	waitResponse := time.NewTimer(time.Millisecond * 300)
 	if dhtNode.responsible(msg.Key) {
 		//fmt.Println(dhtNode.contact.port, "is responsible")
 		m = createLookupFoundMsg(nodeAddress, msg.Origin, [2]string{dhtNode.contact.ip + ":" + dhtNode.contact.port, dhtNode.nodeId})
@@ -312,12 +306,11 @@ func (dhtNode *DHTNode) lookupNext(msg *Msg) {
 		go dhtNode.transport.send(m)
 		waitResponse.Stop()
 	} else {
-		
     	//lookupNextIp := dhtNode.getNextAlive(&Finger{dhtNode.successor[0], dhtNode.successor[1]})
     	m = createLookupMsg("lookup", msg.Origin, msg.Key, nodeAddress, dhtNode.successor[0])
 		go dhtNode.transport.send(m)
     	//fmt.Println(dhtNode.contact.port, "is not responsible, sending to", m.Dst)
-    	waitResponse.Reset(time.Millisecond * 500)
+    	waitResponse.Reset(time.Millisecond * 300)
     	for {
 			select {
 				case <-dhtNode.lookupQueue:
@@ -326,19 +319,10 @@ func (dhtNode *DHTNode) lookupNext(msg *Msg) {
 					return 
 				case <-waitResponse.C:
 					fmt.Println("==================", nodeAddress, "Lookup timeout ======================")
-					/*
-					for _, key := range dhtNode.fingers.fingers {
-						if key.id > dhtNode.successor[1] {
-							m = createLookupMsg("lookup", msg.Origin, msg.Key, nodeAddress, key.ip)
-							go dhtNode.transport.send(m)
-							break
-						} 
-					}
-					*/
 					return
 				}
 			}
-    }
+    	}
 		
 }
 
@@ -374,6 +358,7 @@ func (dhtNode *DHTNode) getNextAlive(finger *Finger) string{
 
 
 // uses fingers to lookup key, not used though
+
 func (dhtNode *DHTNode) fingerLookup(msg *Msg) {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	fingerTable := dhtNode.fingers.fingers
@@ -430,8 +415,14 @@ func (dhtNode *DHTNode) heartbeat() {
 	func (dhtNode *DHTNode) kill() {
 		fmt.Println("%!%!%!%!%!%!%!%!%!%!%!%!%!",dhtNode.contact.port, "is dead %!%!%!%!%!%!%!%!%!%!%!%!%!")
 		dhtNode.online = false
-
 	}
 
+func (dhtNode *DHTNode) revive() {
+	if dhtNode.online == false {
+		fmt.Println("<<<<<<<<<<<<<<<<<<<<<<",dhtNode.contact.port, "IS ALIVE <<<<<<<<<<<<<<<<<<<<<<")
+		dhtNode.online = true
+		dhtNode.startServer()
+	} 
+}
 
 

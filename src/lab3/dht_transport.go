@@ -42,7 +42,7 @@ func (transport *Transport) init_msgQueue() {
 					//fmt.Println(transport.bindAddress, m.Type)
 					switch m.Type {
 						case "addToRing":
-							transport.dhtNode.createTask("addToRing", m)
+							go transport.dhtNode.createTask("addToRing", m)
 						case "setPred":
 							go transport.dhtNode.setPredecessor(m)
 						case "setSucc":
@@ -54,7 +54,9 @@ func (transport *Transport) init_msgQueue() {
 						case "pred":
 							go transport.dhtNode.getPredecessor(m)	
 						case "response":
-							transport.dhtNode.responseQueue <- m
+							go func(){
+								transport.dhtNode.responseQueue <- m
+								}()
 						case "notify":
 							go transport.dhtNode.notify(m)
 							//transport.dhtNode.createTask("notify",m)

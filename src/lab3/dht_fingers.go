@@ -62,7 +62,7 @@ func (dhtNode *DHTNode) updateFingers() {
 func (dhtNode *DHTNode) fingerTimer() {
 	for {
 		if dhtNode.online {
-			time.Sleep(time.Millisecond*7300)
+			time.Sleep(time.Millisecond*6500)
 			dhtNode.createTask("updateFingers", nil)
 		} else {
 			return
