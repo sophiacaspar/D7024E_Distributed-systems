@@ -415,15 +415,11 @@ func (dhtNode *DHTNode) heartbeat() {
 	func (dhtNode *DHTNode) kill() {
 		fmt.Println("%!%!%!%!%!%!%!%!%!%!%!%!%!",dhtNode.contact.port, "is dead %!%!%!%!%!%!%!%!%!%!%!%!%!")
 		dhtNode.online = false
+		dhtNode.successor[0] = ""
+		dhtNode.successor[1] = ""
+		dhtNode.predecessor[0] = ""
+		dhtNode.predecessor[1] = ""
 	}
 
-func (dhtNode *DHTNode) revive() {
-	if dhtNode.online == false {
-		fmt.Println("<<<<<<<<<<<<<<<<<<<<<<",dhtNode.contact.port, "IS ALIVE <<<<<<<<<<<<<<<<<<<<<<")
-		dhtNode.online = true
-		dhtNode.startServer()
-		
-	} 
-}
 
 

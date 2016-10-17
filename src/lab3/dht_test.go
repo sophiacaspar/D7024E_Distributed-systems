@@ -29,6 +29,16 @@ func startNode(nodeId *string, port string) (dhtNode *DHTNode) {
 	return node
 }
 
+func (dhtNode *DHTNode) alive(master *DHTNode) {
+	if dhtNode.online == false {
+		fmt.Println("<<<<<<<<<<<<<<<<<<<<<<",dhtNode.contact.port, "IS ALIVE <<<<<<<<<<<<<<<<<<<<<<")
+		dhtNode.online = true
+		dhtNode.startServer()
+		dhtNode.joinReq(master)
+		
+	} 
+}
+
 /*
 func (dhtNode *DHTNode) revive(master *DHTNode) {
 	if dhtNode.online == false {
@@ -86,7 +96,7 @@ func TestDHT1(t *testing.T) {
 	node3.kill()
 
 	time.Sleep(6000*time.Millisecond)
-	node3.revive()
+	node3.alive(node1)
 	//node3.revive()
 
 	
