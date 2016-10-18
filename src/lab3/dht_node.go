@@ -374,11 +374,13 @@ func (dhtNode *DHTNode) heartbeat() {
 
 }
 
+func (dhtNode *DHTNode) kill() {
+	fmt.Println(dhtNode.nodeId, "is dead")
+	dhtNode.online = false
+}
 
-	func (dhtNode *DHTNode) kill() {
-		fmt.Println(dhtNode.nodeId, "is dead")
-		dhtNode.online = false
-	}
-
-
-
+/* Not done yet */
+func (dhtNode *DHTNode) replicate() {
+	m := create/* add speciell message */(/* add information */)
+	go func () { dhtNode.transport.send(m)}
+}

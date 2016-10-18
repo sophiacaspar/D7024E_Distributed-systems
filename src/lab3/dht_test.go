@@ -3,10 +3,10 @@ package dht
 /** go test -test.run TestDHT1 */
 
 import (
-	//"fmt"
+	"fmt"
 	"testing"
 	"time"
-
+	"io/ioutil"
 )
 
 // dhtNode sends request to master of ring: please add me somewhere
@@ -41,7 +41,7 @@ func TestDHT1(t *testing.T) {
     node5 := makeDHTNode(&id5, "localhost", "1115")
     node6 := makeDHTNode(&id6, "localhost", "1116")
     node7 := makeDHTNode(&id7, "localhost", "1117")
- */
+ 
 
     node0 := makeDHTNode(nil, "localhost", "1110")
     node1 := makeDHTNode(nil, "localhost", "1111")
@@ -68,6 +68,16 @@ func TestDHT1(t *testing.T) {
 	node3.joinReq(node1)
 	node2.joinReq(node1)
 
+*/
+
+	dat, err := ioutil.ReadFile("file.txt")
+    if err != nil {
+		panic(err)
+	}
+	
+    fmt.Print(string(dat))
+    fmt.Print("\n")
+
 /*
 	time.Sleep(7000*time.Millisecond)
 	node3.kill()
@@ -93,8 +103,8 @@ func TestDHT1(t *testing.T) {
 /*
 	//msg := createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress)
 	//go func () { node1.transport.send(msg)}() 
-*/
+
 
 	node0.transport.listen()
-
+*/
 }

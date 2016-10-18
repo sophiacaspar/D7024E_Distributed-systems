@@ -178,5 +178,14 @@ func createHeartbeatMsg(origin, dst string) *Msg{
 	return Msg
 }
 
-
-
+func createUploadMsg(origin, dst string, data string) *Msg{
+	Msg := &Msg{}
+	Msg.Type = "uploadData"
+	Msg.Origin = origin
+	Msg.Key = ""
+	Msg.Src = ""
+	Msg.Dst = dst
+	Msg.LightNode = [2]string{}
+	Msg.Data = string
+	return Msg
+}
