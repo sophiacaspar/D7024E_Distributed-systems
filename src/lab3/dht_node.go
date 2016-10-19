@@ -22,6 +22,7 @@ type DHTNode struct {
 	taskQueue 		chan *Task
 	responseQueue	chan *Msg
 	heartbeatQueue	chan *Msg
+	lookupQueue		chan *Msg
 	fingerMemory	chan *Finger
 }
 
@@ -44,15 +45,19 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 		dhtNode.nodeId = *nodeId
 	}
 
+	dhtNode.online = true
 	dhtNode.successor = [2]string{dhtNode.contact.ip + ":" + dhtNode.contact.port, dhtNode.nodeId}
-	dhtNode.predecessor = [2]string{}
+	dhtNode.predecessor = [2]string{dhtNode.contact.ip + ":" + dhtNode.contact.port, dhtNode.nodeId}
 	dhtNode.taskQueue = make(chan *Task)
 	dhtNode.responseQueue = make(chan *Msg)
 	dhtNode.heartbeatQueue = make(chan *Msg)
 	dhtNode.fingerMemory = make(chan *Finger)
+	dhtNode.lookupQueue = make(chan *Msg)
 
 	dhtNode.fingers = &FingerTable{}
 	dhtNode.createTransport()
+
+	dhtNode.makeFolder()
 
 	return dhtNode
 }
@@ -72,26 +77,34 @@ func (dhtNode *DHTNode) createTask(taskType string, msg *Msg) {
 
 func (dhtNode *DHTNode) startServer() {
 	fmt.Println("starting node ", dhtNode.nodeId)
-	dhtNode.online = true
 	go dhtNode.init_taskQueue()
 	go dhtNode.stabilizeTimer()
-	if dhtNode.contact.port == "1111" { go dhtNode.fingerTimer()}
-	//go dhtNode.heartbeatTimer()
+	go dhtNode.fingerTimer()
+	go dhtNode.heartbeatTimer()
 	go dhtNode.transport.listen()
 
 }
 
+
 func (dhtNode *DHTNode) stabilizeTimer() {
 	for {
-		time.Sleep(time.Millisecond*2500)
-		dhtNode.createTask("stabilize", nil)
+			if dhtNode.online {
+				time.Sleep(time.Millisecond*2000)
+				go dhtNode.createTask("stabilize", nil)
+			} else {
+				return
+			}
 		}	
 }
 
 func (dhtNode *DHTNode) heartbeatTimer() {
 	for {
-		time.Sleep(time.Millisecond*2000)
-		dhtNode.createTask("heartbeat", nil)
+			if dhtNode.online {
+				time.Sleep(time.Millisecond*1000)
+				go dhtNode.createTask("heartbeat", nil)	
+			} else {
+				return
+			}
 		}	
 }
 
@@ -99,29 +112,18 @@ func (dhtNode *DHTNode) heartbeatTimer() {
 // JOIN
 func (dhtNode *DHTNode) addToRing(msg *Msg) {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
+	if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(msg.LightNode[1]))){
+			changeNewNodeSucc := createSetPreSuccMsg("setSucc", msg.LightNode[0], [2]string{dhtNode.successor[0], dhtNode.successor[1]})
+			go func () { dhtNode.transport.send(changeNewNodeSucc)}() 
 
-	if 	(dhtNode.predecessor[0] == "" && dhtNode.successor[1] == dhtNode.nodeId) {
-		dhtNode.successor[0] = msg.LightNode[0]
-		dhtNode.successor[1] = msg.LightNode[1]
-		newSucc := createUpdatePSMsg("updateSucc", msg.LightNode[0], [2]string{nodeAddress, dhtNode.nodeId})
-		go func () { dhtNode.transport.send(newSucc)}() 
-
-		dhtNode.initFingerTable(&Msg{"", "", "", "","", dhtNode.successor, nil})
-		f := createInitFingerMsg(nodeAddress, dhtNode.successor[0], [2]string{nodeAddress, dhtNode.nodeId})
-		go func () { dhtNode.transport.send(f)}() 
+			dhtNode.successor[0] = msg.LightNode[0]
+			dhtNode.successor[1] = msg.LightNode[1]
+			fmt.Println(dhtNode.contact.port, "successor is", msg.LightNode[0])
 
 
-	} else if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(msg.LightNode[1]))){
-		changeNewNodeSucc := createUpdatePSMsg("updateSucc", msg.LightNode[0], [2]string{dhtNode.successor[0], dhtNode.successor[1]})
-		go func () { dhtNode.transport.send(changeNewNodeSucc)}() 
-
-		dhtNode.successor[0] = msg.LightNode[0]
-		dhtNode.successor[1] = msg.LightNode[1]
-
-
-		dhtNode.initFingerTable(&Msg{"", "", "", "","", dhtNode.successor, nil})
-		f := createInitFingerMsg(nodeAddress, dhtNode.successor[0], [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
-		go func () { dhtNode.transport.send(f)}() 
+			dhtNode.initFingerTable(&Msg{"", "", "", "","", dhtNode.successor, nil})
+			f := createInitFingerMsg(nodeAddress, dhtNode.successor[0], [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
+			go func () { dhtNode.transport.send(f)}() 
 
 		
 	} else {
@@ -141,18 +143,16 @@ func (dhtNode *DHTNode) setPredecessor(msg *Msg){
 func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
 		dhtNode.successor[0] = msg.LightNode[0]
 		dhtNode.successor[1] = msg.LightNode[1]
-		fmt.Println(dhtNode.nodeId, "new successor", dhtNode.successor[1])
+		fmt.Println(dhtNode.contact.port, "successor is", msg.LightNode[0])
 }
 
-
-// WTF
 func (dhtNode *DHTNode) getPredecessor(msg *Msg) {
-		m := createResponseMsg(msg.Dst, msg.Src, dhtNode.predecessor)
-		go func () { dhtNode.transport.send(m)} () 
+		m := createResponseMsg(msg.Dst, msg.Origin, dhtNode.predecessor)
+		go dhtNode.transport.send(m)
 
 }
 
-/******* OUTPUTS ********/
+
 func (dhtNode *DHTNode) printRing(msg *Msg) {
 	if msg.Origin != msg.Dst {
 		fmt.Println("Pos in ring:", msg.Dst)
@@ -171,7 +171,7 @@ func (dhtNode *DHTNode) init_taskQueue() {
 		for {
 			select {
 				case t := <-dhtNode.taskQueue:
-					//fmt.Println(dhtNode.nodeId, " task ", t.taskType)
+				//fmt.Println(dhtNode.contact.port, " task ", t.taskType)
 					switch t.taskType {
 						case "addToRing":
 							dhtNode.addToRing(t.msg)
@@ -189,7 +189,7 @@ func (dhtNode *DHTNode) init_taskQueue() {
 						case "heartbeat":
 							dhtNode.heartbeat()
 						case "alive":
-							fmt.Println("node", dhtNode.nodeId, "is alive")
+							//fmt.Println("node", dhtNode.nodeId, "is alive")
 					}
 				}	
 			}		
@@ -200,120 +200,174 @@ func (dhtNode *DHTNode) init_taskQueue() {
 // periodically verify nodes immediate successor and tell the successor about node
 func (dhtNode *DHTNode) stabilize(){
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
-	// get successor's predecessor
+	// get successor's predecessor	
 	getSuccPred := createGetNodeMsg("pred", nodeAddress, dhtNode.successor[0])
 	go dhtNode.transport.send(getSuccPred)
 
-	//send msg
-	waitResponse := time.NewTimer(time.Millisecond*500)
+	// wait for response msg with my successor's predecessor
+	waitResponse := time.NewTimer(time.Millisecond*2000)
+	fmt.Println(nodeAddress, "Stab. Waiting for", getSuccPred.Dst)
 	for {
 		select {
 			case r := <- dhtNode.responseQueue:
-				if ((between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(r.LightNode[1]))) && r.LightNode[1] != "" ){
+				if ((between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(r.LightNode[1]))) && r.LightNode[1] != "" && dhtNode.nodeId != r.LightNode[1]){
 					dhtNode.successor[0] = r.LightNode[0]
 					dhtNode.successor[1] = r.LightNode[1]
+					fmt.Println(dhtNode.contact.port, "stabilized successor is", r.LightNode[0])
 				}
-				
+				// I think I am your predecessor, update!
 				notify := createNotifyMsg(nodeAddress, dhtNode.successor[0], [2]string{nodeAddress, dhtNode.nodeId})
 				go dhtNode.transport.send(notify)
-				fmt.Println("....................stabilized....................")
+				
 				//fmt.Println(dhtNode.nodeId, dhtNode.successor, dhtNode.predecessor)
 				return
-
+		// if we get no response, search for a finger that is alive to put as successor
 			case <- waitResponse.C:
 				//check if alive
-				//changeNewNodeSucc := createUpdatePSMsg("updateSucc", nodeAddress, [2]string{dhtNode.fingers.fingers[1].ip, dhtNode.fingers.fingers[1].id})
-				//go func () { dhtNode.transport.send(changeNewNodeSucc)}()
-				fmt.Println("xxxxxxxxxxxxxx  stabilize timeout  xxxxxxxxxxxxxx")
-				dhtNode.successor[0] = dhtNode.fingers.fingers[1].ip
-				dhtNode.successor[1] = dhtNode.fingers.fingers[1].id
+				fmt.Println("xxxxxxxxxxxxxx  stabilize timeout", dhtNode.contact.port,  "xxxxxxxxxxxxxx")
+				//dhtNode.updateSuccessor(dhtNode.successor[1])
+				dhtNode.successor[0] = dhtNode.fingers.fingers[(size-1)].ip
+				dhtNode.successor[1] = dhtNode.fingers.fingers[(size-1)].id
 				return
-
 		}
-	}
-
+	} 
 }
 
-
+// Update predecessor if node should be between dhtnode and its predecessor
 func (dhtNode *DHTNode) notify(msg *Msg){
 	if ((dhtNode.predecessor[0] == "") || between([]byte (dhtNode.predecessor[1]), []byte (dhtNode.nodeId), []byte (msg.LightNode[1]))){
 		dhtNode.predecessor[0] = msg.LightNode[0]
 		dhtNode.predecessor[1] = msg.LightNode[1]
 	}
+	fmt.Println(dhtNode.predecessor[0], "is predecessor to", dhtNode.contact.port)
 }
 
-func (dhtNode *DHTNode) responsible(key string) bool{
-	if dhtNode.nodeId == key {
-		return true
-	} else {
-		return (between([]byte(dhtNode.nodeId),[]byte(dhtNode.successor[1]), []byte(key)))
-	}
-}
-
-
-func (dhtNode *DHTNode) lookup(msg *Msg) {
+func (dhtNode *DHTNode) updateSuccessor(id string) {
+	k := &Finger{dhtNode.successor[0], dhtNode.successor[1]}
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
-	var m *Msg
-	if dhtNode.responsible(msg.Key) {
-		// return successor
-		//fmt.Println(dhtNode.successor[1], "is responsible for", msg.Key)
-		m = createLookupFoundMsg(nodeAddress, msg.Origin, dhtNode.successor)
-		go dhtNode.transport.send(m)
-    } else {
-    	//fmt.Println(dhtNode.successor[1], "is not responsible for", msg.Key)
-    	m = createLookupMsg("lookup", msg.Origin, msg.Key, nodeAddress, dhtNode.successor[0])
-    	dhtNode.transport.send(m)
-    }
-    
-/*
-	waitResponse := time.NewTimer(time.Millisecond*100)
+	// Get next alive finger without having to send 10000000 check-msg
+	for _, key := range dhtNode.fingers.fingers {
+		if key.id > id {
+			getFingerPre := createGetNodeMsg("pred", nodeAddress, key.ip)
+			go dhtNode.transport.send(getFingerPre)
+			k = key
+			break
+		}
+	}
+
+	waitResponse := time.NewTimer(time.Millisecond * 500)
 	for {
 		select {
-			case <- dhtNode.responseQueue:
-				//fmt.Println(dhtNode.nodeId, " delivered ", m.Type, " message to ", m.Dst )
-				return
+			case <-dhtNode.responseQueue:
+				dhtNode.successor[0] = k.ip
+				dhtNode.successor[1] = k.id
+				fmt.Println(dhtNode.contact.port, "Successor updated to", dhtNode.successor[0])
 
-			case <- waitResponse.C: //if timer is greater than 2000ms
-				//fmt.Println(dhtNode.nodeId, "failed to deliver ", m.Type," message to ", m.Dst)
+				notify := createNotifyMsg(nodeAddress, k.ip, [2]string{nodeAddress, dhtNode.nodeId})
+				go dhtNode.transport.send(notify)
+
+				//dhtNode.successor = r.LightNode
+				return
+			case <-waitResponse.C:
+				dhtNode.updateSuccessor(k.id)
 				return
 		}
-		return
 	}
-	*/
-	return
+}
+
+// Am I responsible for input-key?
+func (dhtNode *DHTNode) responsible(key string) bool{
+	if dhtNode.predecessor[1] == key {
+		return false
+	}
+	if dhtNode.nodeId == key {
+		return true
+	} 
+	return (between([]byte(dhtNode.predecessor[1]),[]byte(dhtNode.nodeId), []byte(key)))
 }
 
 
-
-/*
 func (dhtNode *DHTNode) lookup(key string) {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
+	var m *Msg
+	//fmt.Println("is", dhtNode.contact.port, "responsible for", msg.Key)
+	
 	if dhtNode.responsible(key) {
-		// return successor
-		dhtNode.fingerMemory <- &Finger{dhtNode.successor[0], dhtNode.successor[1]}
-		//fmt.Println(dhtNode.successor[1])
-    } else {
-    	m := createLookupMsg("lookup", nodeAddress, key, nodeAddress, dhtNode.successor[0])
- 		dhtNode.transport.send(m)
+		dhtNode.fingerMemory <- &Finger{nodeAddress, dhtNode.nodeId}
+	} else {
+    	//lookupNextIp := dhtNode.getNextAlive(&Finger{dhtNode.successor[0], dhtNode.successor[1]})
+    	m = createLookupMsg("lookup", nodeAddress, key, nodeAddress, dhtNode.successor[0])
+		go dhtNode.transport.send(m)
     }
 }
+
 
 func (dhtNode *DHTNode) lookupNext(msg *Msg) {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	var m *Msg
+	//fmt.Println("is", dhtNode.contact.port, "responsible for", msg.Key)
+	waitResponse := time.NewTimer(time.Millisecond * 500)
 	if dhtNode.responsible(msg.Key) {
-		// return successor
-		//m = createLookupFoundMsg(nodeAddress, msg.Origin, dhtNode.successor)
-		dhtNode.fingerMemory <- &Finger{dhtNode.successor[0], dhtNode.successor[1]}
-    } else {
+		//fmt.Println(dhtNode.contact.port, "is responsible")
+		m = createLookupFoundMsg(nodeAddress, msg.Origin, [2]string{dhtNode.contact.ip + ":" + dhtNode.contact.port, dhtNode.nodeId})
+		//fmt.Println(m)
+		go dhtNode.transport.send(m)
+		waitResponse.Stop()
+	} else {
+		
+    	//lookupNextIp := dhtNode.getNextAlive(&Finger{dhtNode.successor[0], dhtNode.successor[1]})
     	m = createLookupMsg("lookup", msg.Origin, msg.Key, nodeAddress, dhtNode.successor[0])
-    	dhtNode.transport.send(m)
+		go dhtNode.transport.send(m)
+    	//fmt.Println(dhtNode.contact.port, "is not responsible, sending to", m.Dst)
+    	waitResponse.Reset(time.Millisecond * 500)
+    	for {
+			select {
+				case <-dhtNode.lookupQueue:
+					//fmt.Println(nodeAddress, "got ack")
+					//fmt.Println("msg from", dhtNode.contact.port, "reached", msg.Origin)
+					return 
+				case <-waitResponse.C:
+					fmt.Println("==================", nodeAddress, "Lookup timeout ======================")
+
+					return
+				}
+			}
     }
+		
 }
-    
-*/
+
+// If responsible node is'nt alive, then check next finger instead
+func (dhtNode *DHTNode) getNextAlive(finger *Finger) string{
+		k := finger
+		nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
+		// Get next alive finger without having to send 10000000 check-msg
+		for _, key := range dhtNode.fingers.fingers {
+		if key.id > finger.id || finger.id != dhtNode.successor[1]{
+			isAlive := createGetNodeMsg("isAlive",nodeAddress, key.ip)
+			go dhtNode.transport.send(isAlive)
+			k = key
+			break
+		} 
+	}
+
+	waitResponse := time.NewTimer(time.Millisecond * 500)
+	for {
+		select {
+			case <-dhtNode.responseQueue:
+				if dhtNode.successor[0] != finger.id {
+					dhtNode.successor[0] = k.ip
+					dhtNode.successor[1] = k.id
+				}
+				return k.ip
+			case <-waitResponse.C:
+				fmt.Println(dhtNode.contact.port, "no respond from", k.ip,"-----------------------------------")
+				return dhtNode.getNextAlive(k)
+		}
+	}
+}
 
 
+// uses fingers to lookup key, not used though
 func (dhtNode *DHTNode) fingerLookup(msg *Msg) {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	fingerTable := dhtNode.fingers.fingers
@@ -335,52 +389,49 @@ func (dhtNode *DHTNode) fingerLookup(msg *Msg) {
 
 	}
 
-// if message arrives to this function, then node is online
-/*
-func (dhtNode DHTNode) checkOnline(msg *Msg) {
-	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
-	m := createResponseMsg(nodeAddress, msg.Origin)
-	go func () { dhtNode.transport.send(m)} () 
-}
-*/
 
-
+// Checks if my predecessor is alive, if not then reset my predecessors
 func (dhtNode *DHTNode) heartbeat() {
-	timeout := time.Millisecond*300
+	timeout := time.Millisecond*1000
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
-	if dhtNode.predecessor[0] == "" {
-		return
-	}
 
-	m := createHeartbeatMsg(nodeAddress, dhtNode.predecessor[0])
-	go func () { dhtNode.transport.send(m)} () 
-	waitResponse := time.NewTimer(timeout)
+	if dhtNode.predecessor[0] != "" {
+		m := createHeartbeatMsg(nodeAddress, dhtNode.predecessor[0])
+		go func () { dhtNode.transport.send(m)} () 
+		waitResponse := time.NewTimer(timeout)
 
-	for {
-		select {
-			case <- dhtNode.responseQueue:
-			//case <- dhtNode.heartbeatQueue:
-				//fmt.Println(dhtNode.nodeId, "predecessor is alive: ", dhtNode.predecessor[1])
-				fmt.Println(dhtNode.nodeId, "heartbeat")
-				return
-			case  <- waitResponse.C:
-				fmt.Println("heartbeat timeout")
-				dhtNode.predecessor[0] = ""
-				dhtNode.predecessor[1] = ""
-					// fix data
-				return
+		for {
+			select {
+				case <- dhtNode.heartbeatQueue:
+				//case <- dhtNode.heartbeatQueue:
+					//fmt.Println(dhtNode.contact.port, "predecessor is alive: ", dhtNode.predecessor[0])
+					//fmt.Println(dhtNode.contact.port, "heartbeat respond from", dhtNode.predecessor[0])
+					return
+				case  <- waitResponse.C:
+					fmt.Println("heartbeat timeout", dhtNode.contact.port)
+					dhtNode.predecessor[0] = ""
+					dhtNode.predecessor[1] = ""
+					dhtNode.createTask("stabilize", nil)
+						// fix data
+					dhtNode.takeResponsibility(dhtNode.predecessor[1])
+					return
+			}
 		}
 	}
-
 }
 
-func (dhtNode *DHTNode) kill() {
-	fmt.Println(dhtNode.nodeId, "is dead")
-	dhtNode.online = false
-}
-
-/* Not done yet */
+/* Not done yet 
 func (dhtNode *DHTNode) replicate() {
-	m := create/* add speciell message */(/* add information */)
+	m := create/* add speciell message (/* add information )
 	go func () { dhtNode.transport.send(m)}
-}
+}*/
+
+// KILLS NODE
+	func (dhtNode *DHTNode) kill() {
+		fmt.Println("%!%!%!%!%!%!%!%!%!%!%!%!%!",dhtNode.contact.port, "is dead %!%!%!%!%!%!%!%!%!%!%!%!%!")
+		dhtNode.online = false
+		dhtNode.successor[0] = ""
+		dhtNode.successor[1] = ""
+		dhtNode.predecessor[0] = ""
+		dhtNode.predecessor[1] = ""
+	}

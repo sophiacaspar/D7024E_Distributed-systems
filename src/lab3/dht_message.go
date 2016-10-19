@@ -178,7 +178,7 @@ func createHeartbeatMsg(origin, dst string) *Msg{
 	return Msg
 }
 
-func createUploadMsg(origin, dst string, data string) *Msg{
+func createUploadMsg(origin, dst string, data []byte) *Msg{
 	Msg := &Msg{}
 	Msg.Type = "uploadData"
 	Msg.Origin = origin
@@ -186,6 +186,41 @@ func createUploadMsg(origin, dst string, data string) *Msg{
 	Msg.Src = ""
 	Msg.Dst = dst
 	Msg.LightNode = [2]string{}
-	Msg.Data = string
+	Msg.Data = data
+	return Msg
+}
+
+ func createReplicateMsg(origin, dst string, data []byte) *Msg{
+ 	Msg := &Msg{}
+ 	Msg.Type = "replicate"
+ 	Msg.Origin = origin
+ 	Msg.Key = ""
+ 	Msg.Src = ""
+ 	Msg.Dst = dst
+ 	Msg.LightNode = [2]string{}
+	Msg.Data = data
+ 	return Msg
+ }
+
+ func createGetBackupMsg(origin, dst string) *Msg{
+ 	Msg := &Msg{}
+ 	Msg.Type = "getBackup"
+ 	Msg.Origin = origin
+ 	Msg.Key = ""
+ 	Msg.Src = ""
+ 	Msg.Dst = dst
+ 	Msg.LightNode = [2]string{}
+ 	return Msg
+ }
+
+ func createSetPreSuccMsg(t, dst string, newNodeInfo [2]string) *Msg{
+	Msg := &Msg{}
+	Msg.Type = t
+	Msg.Origin = ""
+	Msg.Key = ""
+	Msg.Src = ""
+	Msg.Dst = dst
+	Msg.LightNode = newNodeInfo
+	Msg.Data = nil
 	return Msg
 }

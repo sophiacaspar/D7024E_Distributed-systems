@@ -29,7 +29,7 @@ func (transport *Transport) listen() {
 			msg := Msg{}
 			err = dec.Decode(&msg)
 			go func() { transport.msgQueue <- &msg } ()
-		}
+		} else{return}
 
 	}
 }
@@ -39,46 +39,71 @@ func (transport *Transport) init_msgQueue() {
 		for {
 			select {
 				case m := <-transport.msgQueue:
-					fmt.Println(transport.bindAddress, m.Type)
+					//fmt.Println(transport.bindAddress, m.Type)
 					switch m.Type {
 						case "addToRing":
 							transport.dhtNode.createTask("addToRing", m)
-						case "updatePred":
+						case "setPred":
 							go transport.dhtNode.setPredecessor(m)
-						case "updateSucc":
+						case "setSucc":
 							go transport.dhtNode.setSuccessor(m)
 						case "printRing":
 							transport.dhtNode.createTask("printRing", m)
 						case "printFinger":
 							go transport.dhtNode.createTask("printRingFingers",m)
 						case "pred":
-							go transport.dhtNode.getPredecessor(m)
+							go transport.dhtNode.getPredecessor(m)	
 						case "response":
 							transport.dhtNode.responseQueue <- m
 						case "notify":
 							go transport.dhtNode.notify(m)
 							//transport.dhtNode.createTask("notify",m)
 						case "lookup":
-							//go transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))
-							//fmt.Println(transport.bindAddress, "lookup", m.Key)
-							go transport.dhtNode.lookup(m)
+							go transport.dhtNode.transport.send(createAckMsg("lookupAck", m.Dst, m.Src))
+							go transport.dhtNode.lookupNext(m)
 						case "lookupFound":
-							transport.dhtNode.fingerMemory <- &Finger{m.LightNode[0], m.LightNode[1]}
+							transport.dhtNode.transport.send(createAckMsg("lookupAck", m.Dst, m.Origin))
+							go func(){
+								transport.dhtNode.fingerMemory <- &Finger{m.LightNode[0], m.LightNode[1]}	
+							}()
 						case "fingerLookup":
 							go transport.dhtNode.fingerLookup(m)
 						case "finger":
-							transport.dhtNode.createTask("updateFingers", m)
+							go transport.dhtNode.createTask("updateFingers", m)
 						case "initFinger":
 							go transport.dhtNode.initFingerTable(m)
+						case "checkFinger":
+							transport.dhtNode.transport.send(createResponseMsg(m.Dst, m.Origin, [2]string{transport.bindAddress, transport.dhtNode.nodeId}))
 						case "heartbeat":
 							//transport.dhtNode.heartbeatQueue <- (createAckMsg(m.Dst, m.Origin))
 							//go func () { transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))} ()
-							transport.dhtNode.transport.send(createAckMsg(m.Dst, m.Origin))
+							if transport.dhtNode.online {
+								transport.dhtNode.transport.send(createHeartbeatAnswer(m.Dst, m.Origin))
+							} 
+						case "heartbeatAnswer":
+							go func(){
+									transport.dhtNode.heartbeatQueue <- m
+								}()
+							
+						case "isAlive":
+							if transport.dhtNode.online {
+								transport.dhtNode.transport.send(createResponseMsg(m.Dst, m.Origin, [2]string{transport.bindAddress, transport.dhtNode.nodeId}))
+							}
 						case "ack":
 							transport.dhtNode.responseQueue <- m
+						case "lookupAck":
+							go func(){
+								transport.dhtNode.lookupQueue <- m	
+							}()
+						case "uploadData":
+							go transport.dhtNode.addFile(m)
+						case "replicate":
+							go transport.dhtNode.replicate(m)
+						case "getBackup":
+							go transport.dhtNode.getFileBackup(m)
 					}
-				}	
-			}		
+				} 
+			}	
 		} ()
 }
 
@@ -95,6 +120,6 @@ func (transport *Transport) send(msg *Msg) {
 		defer conn.Close()
 
 		_, err = conn.Write(bytes)
-	}
+	} 
 }
 

@@ -24,61 +24,56 @@ func (dhtNode *DHTNode) initFingerTable(msg *Msg) {
 		}
 }
 
-func (dhtNode *DHTNode) updateFingers () {
+func (dhtNode *DHTNode) updateFingers() {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	var response = false
 	for i := 0; i < size; i++ {
-
 		if dhtNode.fingers.fingers[i] != nil {
 			idBytes, _ := hex.DecodeString(dhtNode.nodeId)
 			fingerHex, _ := calcFinger(idBytes, (i + 1), size)
 			
 			if fingerHex == " " {
 				fingerHex = "00"
-			}	
-			go dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0]))
-/*
-			if i == 0 {
-				//dhtNode.transport.send(createMsg("lookup", fingerHex, src, dhtNode.fingers.fingerList[i].address, src))
-				//go dhtNode.lookup(fingerHex)
-				dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0]))
-				//return
-			} else {
-				//dhtNode.transport.send(createLookupMsg("lookup", fingerHex, src, dhtNode.fingers.fingers[i-1].address, src))
-				dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.fingers.fingers[(i-1)].ip))
 			}
-			*/
-			waitRespons := time.NewTimer(time.Millisecond * 1000)
+			go dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0]))
+
+			waitResponse := time.NewTimer(time.Millisecond * 2000)
 			for response != true {
 				select {
 				case s := <-dhtNode.fingerMemory:
 					dhtNode.fingers.fingers[i] = s
-					fmt.Println(dhtNode.contact.port, "added finger", (i+1), s.ip)
+					//fmt.Println(dhtNode.contact.port, "added finger", (i+1), s.ip, "figerhex", fingerHex)
 					response = true
-				case <-waitRespons.C:
-					fmt.Println("finger timeout,", dhtNode.contact.ip,"is searching for ",fingerHex)
-					//fmt.Print("(CALLED FROM FINGERS) waiting respons from: ")
-					//fmt.Println(dhtNode.fingers.fingerList[i-0].address)
+				case <-waitResponse.C:
+					fmt.Println("finger timeout,", dhtNode.contact.port,"is searching for ",fingerHex)
 					response = true
 				//default:
 				//	fmt.Println("when you try your best but don't succeed")
 				}
 			}
-			response = false
 
+			response = false
 		}
 	}
+
 }
+
 
 func (dhtNode *DHTNode) fingerTimer() {
 	for {
-		time.Sleep(time.Millisecond*7300)
-		fmt.Println("\n############ STABILIZING FINGERS FOR", dhtNode.nodeId,"###############")
-		dhtNode.createTask("updateFingers", nil)
+		if dhtNode.online {
+			time.Sleep(time.Millisecond*7300)
+			dhtNode.createTask("updateFingers", nil)
+		} else {
+			return
+		}
 	}	
 }
 
 
+/*********************************************
+**** PRINTS FINGERS WITH DIFFERENT OUTPUTS ***
+*********************************************/
 func (dhtNode *DHTNode) printRingFingers(msg *Msg) {
 	if msg.Origin != msg.Dst {
 		fmt.Print(dhtNode.nodeId, " [ ")
@@ -100,3 +95,11 @@ func (dhtNode *DHTNode) printFingers() {
 		}
 }
 
+func (dhtNode *DHTNode) printMyFingers() {
+	fmt.Println("")
+	fmt.Print(dhtNode.contact.ip, ": [")
+		for _, f := range dhtNode.fingers.fingers {
+			fmt.Print(f.ip, " ")
+		}
+	fmt.Println("]")
+}
