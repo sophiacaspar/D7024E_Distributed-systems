@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>skynet</title>
+<script>
+function startUpload(){
+    var xhr = new XMLHttpRequest();
+    var data = {text: "Hello World!"};
+  xhr.onload = function() {
+    if (xhr.status == 200) {
+      location.reload();
+      //alert("Delete succeeded");
+    
+    } else {
+      alert("Error! Delete failed");
+    }
+  };
+  xhr.onerror = function() {
+    alert("Error! Upload failed. Cannot connect to server.");
+  };
+    
+  xhr.open('POST', 'http://{{.Address}}/storage/', true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.send(JSON.stringify(data));
+    
+}
+</script>
+
+
+<style>
+nav {
+    float: left;
+    max-width: 500px;
+    margin: 10px;
+}
+nav ul {
+    list-style-type: none;
+}
+article {
+    margin-left: 200px;
+    padding: 1em;
+    overflow: hidden;
+}
+</style>
+</head>
+<body>
+<header>
+   <h1>The Grand Repository in the Sky</h1>
+</header>
+<nav>
+  <ul>
+    <li>Select new file: <input type="file" id="myFile"> <button onclick="startUpload()">Upload</button></li>
+  </ul>
+  <p>
+  <ul>
+    <li>{{.Filename}} <button onclick="">Open</button> <button onclick="">Delete</button></li>
+    <li>{{.Filename}} <button onclick="">Open</button> <button onclick="">Delete</button></li>
+  </ul>
+</nav>
+
+<article>
+        <form action="/storage" method="POST">
+        <textarea name="message" rows="20" cols="60">This is where the data should be</textarea>
+        <br>
+        <input type="submit" value="Update">
+        </form>
+</article>
+</body>
+</html>

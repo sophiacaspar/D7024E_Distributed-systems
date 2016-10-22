@@ -7,8 +7,19 @@ type Msg struct {
 	Src       	string
 	Dst      	string
 	LightNode	[2]string 	// 0: address, 1: nodeID
-	Data		string
-	FileName 	string
+	Data		[]byte
+}
+
+func createMessage(t, origin, key, src, dst string, ln [2]string, bytes []byte) *Msg {
+	Msg := &Msg{}
+	Msg.Type = t
+	Msg.Origin = origin
+	Msg.Key = key
+	Msg.Src = src
+	Msg.Dst = dst
+	Msg.LightNode = ln
+	Msg.Data = bytes
+	return Msg
 }
 
 func createAckMsg(t, src, dst string) *Msg{
@@ -19,7 +30,7 @@ func createAckMsg(t, src, dst string) *Msg{
 	Msg.Src = src
 	Msg.Dst = dst
 	Msg.LightNode = [2]string{}
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -31,7 +42,7 @@ func createJoinMsg(dst string, newNodeInfo [2]string) *Msg {
 	Msg.Src = ""
 	Msg.Dst = dst
 	Msg.LightNode = newNodeInfo
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -43,7 +54,7 @@ func createSetPreSuccMsg(t, dst string, newNodeInfo [2]string) *Msg{
 	Msg.Src = ""
 	Msg.Dst = dst
 	Msg.LightNode = newNodeInfo
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -55,7 +66,7 @@ func createPrintMsg(origin, dst string) *Msg{
 	Msg.Src = ""
 	Msg.Dst = dst
 	Msg.LightNode = [2]string{}
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -67,7 +78,7 @@ func createPrintFingerMsg(origin, dst string) *Msg{
 	Msg.Src = ""
 	Msg.Dst = dst
 	Msg.LightNode = [2]string{}
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -79,7 +90,7 @@ func createResponseMsg(src, dst string, ln [2]string) *Msg{
 	Msg.Src = src
 	Msg.Dst = dst
 	Msg.LightNode = ln
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -91,7 +102,7 @@ func createGetNodeMsg(t, origin, dst string) *Msg{
 	Msg.Src = ""
 	Msg.Dst = dst
 	Msg.LightNode = [2]string{}
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -103,7 +114,7 @@ func createNotifyMsg(src, dst string, ln [2]string) *Msg{
 	Msg.Src = src
 	Msg.Dst = dst
 	Msg.LightNode = ln
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -115,7 +126,7 @@ func createLookupMsg(t, origin, key, src, dst string) *Msg{
 	Msg.Src = src
 	Msg.Dst = dst
 	Msg.LightNode = [2]string{}
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -127,7 +138,7 @@ func createLookupFoundMsg(origin, dst string, node [2]string) *Msg{
 	Msg.Src = ""
 	Msg.Dst = dst
 	Msg.LightNode = node
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -139,7 +150,7 @@ func createFingerMsg(src, dst string) *Msg{
 	Msg.Src = src
 	Msg.Dst = dst
 	Msg.LightNode = [2]string{}
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -151,7 +162,7 @@ func createInitFingerMsg(src, dst string, finger [2]string) *Msg{
 	Msg.Src = src
 	Msg.Dst = dst
 	Msg.LightNode = finger
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -163,7 +174,7 @@ func createHeartbeatMsg(origin, dst string) *Msg{
 	Msg.Src = ""
 	Msg.Dst = dst
 	Msg.LightNode = [2]string{}
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
@@ -175,72 +186,11 @@ func createHeartbeatAnswer(origin, dst string) *Msg{
 	Msg.Src = ""
 	Msg.Dst = dst
 	Msg.LightNode = [2]string{}
-	Msg.Data = ""
+	Msg.Data = nil
 	return Msg
 }
 
 
-func createUploadMsg(origin, dst, filename string, data string) *Msg{
-	Msg := &Msg{}
-	Msg.Type = "uploadData"
-	Msg.Origin = origin
-	Msg.Key = ""
-	Msg.Src = ""
-	Msg.Dst = dst
-	Msg.LightNode = [2]string{}
-	Msg.FileName = filename
-	Msg.Data = data
-	return Msg
-}
 
- func createReplicateMsg(origin, dst, filename string, data string) *Msg{
- 	Msg := &Msg{}
- 	Msg.Type = "replicate"
- 	Msg.Origin = origin
- 	Msg.Key = ""
- 	Msg.Src = ""
- 	Msg.Dst = dst
- 	Msg.LightNode = [2]string{}
-	Msg.FileName = filename
-	Msg.Data = data
- 	return Msg
- }
 
- func createCheckSuccDataMsg(origin, dst, oldPredecessor string) *Msg{
- 	Msg := &Msg{}
- 	Msg.Type = "getsuccData"
- 	Msg.Origin = origin
- 	Msg.Key = ""
- 	Msg.Dst = dst
- 	Msg.Src = oldPredecessor
- 	Msg.LightNode = [2]string{}
-	Msg.FileName = ""
-	Msg.Data = ""
- 	return Msg
- }
 
- func createGetBackupMsg(origin, dst string) *Msg{
- 	Msg := &Msg{}
- 	Msg.Type = "getBackup"
- 	Msg.Origin = origin
- 	Msg.Key = ""
- 	Msg.Src = ""
- 	Msg.Dst = dst
- 	Msg.LightNode = [2]string{}
- 	Msg.FileName = ""
- 	Msg.Data = ""
- 	return Msg
- }
-
- func createSuccFileDeleteMsg(origin, dst, filename string) *Msg{
- 	Msg := &Msg{}
- 	Msg.Type = "deleteFileSucc"
- 	Msg.Origin = origin
- 	Msg.Key = ""
- 	Msg.Src = ""
- 	Msg.Dst = dst
- 	Msg.LightNode = [2]string{}
- 	Msg.FileName = filename
- 	Msg.Data = ""
- 	return Msg
- }
