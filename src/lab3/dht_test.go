@@ -1,12 +1,15 @@
 package dht
 
 /** go test -test.run TestDHT1 */
+/** Nodernas ordning: 4, 5, 2, 3, 7, 0, 6, 1   */
 
 import (
 	"fmt"
 	"testing"
 	"time"
-
+	//"os"
+	"io/ioutil"
+	b64 "encoding/base64"
 )
 
 // dhtNode sends request to master of ring: please add me somewhere
@@ -35,19 +38,19 @@ func (dhtNode *DHTNode) alive(master *DHTNode) {
 		dhtNode.online = true
 		dhtNode.startServer()
 		dhtNode.joinReq(master)
-		
+		time.Sleep(300*time.Millisecond)
+		dhtNode.newSuccessor()
+		time.Sleep(300*time.Millisecond)
+		nextmsg := createGetBackupMsg(dhtNode.transport.bindAddress, dhtNode.successor[0])
+		go func () {dhtNode.transport.send(nextmsg)}() 
+
+		fmt.Print("--------------------------------------------" + "\n")
+		fmt.Print(dhtNode.transport.bindAddress + " gets data and file back if it exist in successor " + dhtNode.successor[0] + "\n")
+		fmt.Print("--------------------------------------------" + "\n")
+
 	} 
 }
 
-/*
-func (dhtNode *DHTNode) revive(master *DHTNode) {
-	if dhtNode.online == false {
-		fmt.Println("<<<<<<<<<<<<<<<<<<<<<<",dhtNode.contact.port, "IS ALIVE <<<<<<<<<<<<<<<<<<<<<<")
-		dhtNode.online = true
-		dhtNode.joinReq(master)
-	} 
-}
-*/
 func TestDHT1(t *testing.T) {
 /*
 	id0 := "00"
@@ -70,7 +73,6 @@ func TestDHT1(t *testing.T) {
     node7 := startNode(&id7, "1117")
 */
 
- 
 	node0 := startNode(nil, "1110")
     node1 := startNode(nil, "1111")
     node2 := startNode(nil, "1112")
@@ -88,48 +90,73 @@ func TestDHT1(t *testing.T) {
 	node0.joinReq(node1)
 	node4.joinReq(node1)
 
+	path := "/Users/Zengin/Documents/Coding/D7024E/D7024E_Distributed-systems/src/lab3/file/"
+	
+	files, err := ioutil.ReadDir(path)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, f := range files {
+		file, _ := ioutil.ReadFile(path + f.Name())
+
+		nodeId := generateNodeId(node4.transport.bindAddress)
+
+		sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
+		sFileData := b64.StdEncoding.EncodeToString(file)
+
+		fmt.Print("--------------------------------------------" + "\n")
+		fmt.Print("Send data: " + string(file) + " and file: " + f.Name() + " to: " + node4.transport.bindAddress + " with NodeId: " + nodeId + "\n")
+		fmt.Print("--------------------------------------------" + "\n")
+		
+		msg := createUploadMsg(node3.transport.bindAddress, node4.transport.bindAddress, sFileName, sFileData)	
+		go func () { node3.transport.send(msg)}()
+	}
+/*
+	path2 := "/Users/Zengin/Documents/Coding/D7024E/D7024E_Distributed-systems/src/lab3/file2/"
+
+	files2, error := ioutil.ReadDir(path2)
+
+	if error != nil {
+		panic(error)
+	}
+
+	for _, f := range files2 {
+		file, _ := ioutil.ReadFile(path + f.Name())
+
+		nodeId := generateNodeId(node5.transport.bindAddress)
+
+		sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
+		sFileData := b64.StdEncoding.EncodeToString(file)
+
+		fmt.Print("--------------------------------------------" + "\n")
+		fmt.Print("Send data: " + string(file) + " and file: " + f.Name() + " to: " + node4.transport.bindAddress + " with NodeId: " + nodeId + "\n")
+		fmt.Print("--------------------------------------------" + "\n")
+		
+		msg := createUploadMsg(node4.transport.bindAddress, node5.transport.bindAddress, sFileName, sFileData)	
+		go func () { node4.transport.send(msg)}()
+	}
+*/
 	fmt.Print("")
 	time.Sleep(10000*time.Millisecond)
 	
 	//node3.printMyFingers()
 	//fmt.Println("#####################", node3.responsible("bf06670af35ed4abcadd95abe8079568f4df38e6"), "#####################")
-	node3.kill()
+	node4.kill()
 
 	time.Sleep(6000*time.Millisecond)
-	node3.alive(node1)
-	//node3.revive()
 
+	//node5.kill()
+
+	//time.Sleep(3000*time.Millisecond)
+
+	node4.alive(node1)
+
+	//time.Sleep(6000*time.Millisecond)
+
+	//node5.alive(node1)
 	
-	//node0.kill()
-	//time.Sleep(10000*time.Millisecond)
-	//msg := createPrintMsg(node7.transport.bindAddress, node1.transport.bindAddress)
-	//go func () { node2.createTask("printRing", createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress))}()
-
-	
-/*	fmt.Println("#####################", node3.responsible(bf06670af35ed4abcadd95abe8079568f4df38e6), "#####################")
-*/
-/*
-	time.Sleep(10000*time.Millisecond)
-	msg := createPrintFingerMsg(node4.transport.bindAddress, node5.transport.bindAddress)
-	go func () { node4.transport.send(msg)}() 
-
-*/
-
-
-
-	//time.Sleep(10000*time.Millisecond)
-	//node2.lookup("04")
- 
-
-
-/*
-	time.Sleep(7000*time.Millisecond)
-	node1.lookupReq("lookup", "10", node5)
-/*
-	//msg := createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress)
-	//go func () { node1.transport.send(msg)}() 
-*/
-
-	//node0.transport.listen()
 	time.Sleep(2000*time.Second)
+
 }
