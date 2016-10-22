@@ -129,6 +129,7 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 		forwardToSucc := createJoinMsg(dhtNode.successor[0], msg.LightNode)
 		go func () { dhtNode.transport.send(forwardToSucc)} () 
 	}
+	fmt.Println(dhtNode.contact.port, "is added to ring")
 }
 
 
@@ -199,32 +200,34 @@ func (dhtNode *DHTNode) init_taskQueue() {
 func (dhtNode *DHTNode) stabilize(){
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	// get successor's predecessor	
-	getSuccPred := createGetNodeMsg("pred", nodeAddress, dhtNode.successor[0])
-	go dhtNode.transport.send(getSuccPred)
+	if dhtNode.successor[0] != "" {
+		getSuccPred := createGetNodeMsg("pred", nodeAddress, dhtNode.successor[0])
+		go dhtNode.transport.send(getSuccPred)
 
-	// wait for response msg with my successor's predecessor
-	waitResponse := time.NewTimer(time.Millisecond*2000)
-	fmt.Println(nodeAddress, "Stab. Waiting for", getSuccPred.Dst)
-	for {
-		select {
-			case r := <- dhtNode.responseQueue:
-				if ((between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(r.LightNode[1]))) && r.LightNode[1] != "" && dhtNode.nodeId != r.LightNode[1]){
-					dhtNode.successor[0] = r.LightNode[0]
-					dhtNode.successor[1] = r.LightNode[1]
-					fmt.Println(dhtNode.contact.port, "stabilized successor is", r.LightNode[0])
-				}
-				// I think I am your predecessor, update!
-				notify := createNotifyMsg(nodeAddress, dhtNode.successor[0], [2]string{nodeAddress, dhtNode.nodeId})
-				go dhtNode.transport.send(notify)
-				return
-		// if we get no response, search for a finger that is alive to put as successor
-			case <- waitResponse.C:
-				//check if alive
-				fmt.Println("xxxxxxxxxxxxxx  stabilize timeout", dhtNode.contact.port,  "xxxxxxxxxxxxxx")
-				dhtNode.updateSuccessor(dhtNode.successor[1])
-				//dhtNode.successor[0] = dhtNode.fingers.fingers[(size-1)].ip
-				//dhtNode.successor[1] = dhtNode.fingers.fingers[(size-1)].id
-				return
+		// wait for response msg with my successor's predecessor
+		waitResponse := time.NewTimer(time.Millisecond*2000)
+		fmt.Println(nodeAddress, "Stab. Waiting for", getSuccPred.Dst)
+		for {
+			select {
+				case r := <- dhtNode.responseQueue:
+					if ((between([]byte(dhtNode.nodeId), []byte(dhtNode.successor[1]), []byte(r.LightNode[1]))) && r.LightNode[1] != "" && dhtNode.nodeId != r.LightNode[1]){
+						dhtNode.successor[0] = r.LightNode[0]
+						dhtNode.successor[1] = r.LightNode[1]
+						fmt.Println(dhtNode.contact.port, "stabilized successor is", r.LightNode[0])
+					}
+					// I think I am your predecessor, update!
+					notify := createNotifyMsg(nodeAddress, dhtNode.successor[0], [2]string{nodeAddress, dhtNode.nodeId})
+					go dhtNode.transport.send(notify)
+					return
+			// if we get no response, search for a finger that is alive to put as successor
+				case <- waitResponse.C:
+					//check if alive
+					fmt.Println("xxxxxxxxxxxxxx  stabilize timeout", dhtNode.contact.port,  "xxxxxxxxxxxxxx")
+					dhtNode.updateSuccessor(dhtNode.successor[1])
+					//dhtNode.successor[0] = dhtNode.fingers.fingers[(size-1)].ip
+					//dhtNode.successor[1] = dhtNode.fingers.fingers[(size-1)].id
+					return
+			}
 		}
 	} 
 }
