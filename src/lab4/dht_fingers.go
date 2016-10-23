@@ -25,6 +25,7 @@ func (dhtNode *DHTNode) initFingerTable(msg *Msg) {
 }
 
 func (dhtNode *DHTNode) updateFingers() {
+	if dhtNode.successor[0] != "" {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	var response = false
 	for i := 0; i < size; i++ {
@@ -35,27 +36,26 @@ func (dhtNode *DHTNode) updateFingers() {
 			if fingerHex == " " {
 				fingerHex = "00"
 			}
-			if dhtNode.successor[0] != "" {
-				go dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0]))
+			go dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0]))
 
-				waitResponse := time.NewTimer(time.Millisecond * 2000)
-				for response != true {
-					select {
-					case s := <-dhtNode.fingerMemory:
-						dhtNode.fingers.fingers[i] = s
-						//fmt.Println(dhtNode.contact.port, "added finger", (i+1), s.ip, "figerhex", fingerHex)
-						response = true
-					case <-waitResponse.C:
-						fmt.Println("finger timeout,", dhtNode.contact.port,"is searching for ",fingerHex)
-						response = true
-					//default:
-					//	fmt.Println("when you try your best but don't succeed")
-					}
+			waitResponse := time.NewTimer(time.Millisecond * 2000)
+			for response != true {
+				select {
+				case s := <-dhtNode.fingerMemory:
+					dhtNode.fingers.fingers[i] = s
+					//fmt.Println(dhtNode.contact.port, "added finger", (i+1), s.ip, "figerhex", fingerHex)
+					response = true
+				case <-waitResponse.C:
+					fmt.Println("finger timeout,", dhtNode.contact.port,"is searching for ",fingerHex)
+					response = true
+				//default:
+				//	fmt.Println("when you try your best but don't succeed")
 				}
-
-				response = false
 			}
+
+			response = false
 		}
+	}
 	}
 
 }
