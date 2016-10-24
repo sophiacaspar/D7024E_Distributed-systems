@@ -90,7 +90,7 @@ func TestDHT1(t *testing.T) {
 	node0.joinReq(node1)
 	node4.joinReq(node1)
 
-	path := "/Users/Zengin/Documents/Coding/D7024E/D7024E_Distributed-systems/src/lab3/file/"
+	path := "/Users/Sophia/workshop/go/src/lab3/file/"
 	
 	files, err := ioutil.ReadDir(path)
 

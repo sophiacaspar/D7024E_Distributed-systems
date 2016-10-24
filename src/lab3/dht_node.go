@@ -237,8 +237,12 @@ func (dhtNode *DHTNode) stabilize(){
 // Update predecessor if node should be between dhtnode and its predecessor
 func (dhtNode *DHTNode) notify(msg *Msg){
 	if ((dhtNode.predecessor[0] == "") || between([]byte (dhtNode.predecessor[1]), []byte (dhtNode.nodeId), []byte (msg.LightNode[1]))){
+		tempPred := dhtNode.predecessor
 		dhtNode.predecessor[0] = msg.LightNode[0]
 		dhtNode.predecessor[1] = msg.LightNode[1]
+		if tempPred[0] != msg.LightNode[0] {
+			fmt.Println("00000000000000000000000000000 NOT ALIKE")
+		}
 	}
 	fmt.Println(dhtNode.predecessor[0], "is predecessor to", dhtNode.contact.port)
 }
