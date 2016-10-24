@@ -25,6 +25,7 @@ func (dhtNode *DHTNode) initFingerTable(msg *Msg) {
 }
 
 func (dhtNode *DHTNode) updateFingers() {
+	if dhtNode.successor[0] != "" {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	var response = false
 	for i := 0; i < size; i++ {
@@ -54,6 +55,7 @@ func (dhtNode *DHTNode) updateFingers() {
 
 			response = false
 		}
+	}
 	}
 
 }

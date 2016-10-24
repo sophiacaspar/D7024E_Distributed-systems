@@ -138,7 +138,7 @@ func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
 		dhtNode.successor[0] = msg.LightNode[0]
 		dhtNode.successor[1] = msg.LightNode[1]
 		fmt.Println(dhtNode.contact.port, "successor is", msg.LightNode[0])
-			
+				
 		NewMsg := createCheckSuccDataMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
 		go dhtNode.transport.send(NewMsg)
 }
@@ -237,11 +237,11 @@ func (dhtNode *DHTNode) notify(msg *Msg){
 		//tempPred := dhtNode.predecessor
 		dhtNode.predecessor[0] = msg.LightNode[0]
 		dhtNode.predecessor[1] = msg.LightNode[1]
-		//if tempPred[0] != msg.LightNode[0] {
-			go dhtNode.checkIfReplicate()
-			m := createDeletBackupeMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], dhtNode.predecessor[1])
-			go dhtNode.transport.send(m)
-		//}
+
+		go dhtNode.checkIfReplicate()
+		m := createDeletBackupeMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], dhtNode.predecessor[1])
+		go dhtNode.transport.send(m)
+		
 	}
 	fmt.Println(dhtNode.predecessor[0], "is predecessor to", dhtNode.contact.port)
 }

@@ -1,12 +1,15 @@
 package dht
 
 /** go test -test.run TestDHT1 */
+/** Nodernas ordning: 4, 5, 2, 3, 7, 0, 6, 1   */
 
 import (
 	"fmt"
 	"testing"
 	"time"
-
+	//"os"
+	"io/ioutil"
+	b64 "encoding/base64"
 )
 
 // dhtNode sends request to master of ring: please add me somewhere
@@ -33,41 +36,18 @@ func (dhtNode *DHTNode) alive(master *DHTNode) {
 	if dhtNode.online == false {
 		fmt.Println("<<<<<<<<<<<<<<<<<<<<<<",dhtNode.contact.port, "IS ALIVE <<<<<<<<<<<<<<<<<<<<<<")
 		dhtNode.online = true
-		//dhtNode.startServer()
 		go dhtNode.init_taskQueue()
 		go dhtNode.stabilizeTimer()
 		go dhtNode.fingerTimer()
 		go dhtNode.heartbeatTimer()
+
 		go dhtNode.transport.listen()
+		//dhtNode.startServer()
 		dhtNode.joinReq(master)
-		
 	} 
 }
 
-
 func TestDHT1(t *testing.T) {
-/*
-	id0 := "00"
-    id1 := "01"
-    id2 := "02"
-    id3 := "03"
-    id4 := "04"
-    id5 := "05"
-    id6 := "06"
-    id7 := "07"
-
-
-    node0 := startNode(&id0, "1110")
-    node1 := startNode(&id1, "1111")
-    node2 := startNode(&id2, "1112")
-    node3 := startNode(&id3, "1113")
-    node4 := startNode(&id4, "1114")
-    node5 := startNode(&id5, "1115")
-    node6 := startNode(&id6, "1116")
-    node7 := startNode(&id7, "1117")
-*/
-
- 
 	node0 := startNode(nil, "1110")
     node1 := startNode(nil, "1111")
     node2 := startNode(nil, "1112")
@@ -85,17 +65,47 @@ func TestDHT1(t *testing.T) {
 	node0.joinReq(node1)
 	node4.joinReq(node1)
 
+	//Sophias path
+	//path := "/Users/Sophia/workshop/go/src/lab3/file/"
+	
+	// Eriks path
+	path := "/Users/Zengin/Documents/Coding/D7024E/D7024E_Distributed-systems/src/lab3/file/"
+	
+	time.Sleep(6000*time.Millisecond)
+
+	
+	files, err := ioutil.ReadDir(path)
+
+	if err != nil {
+		panic(err)
+	}
+
+	for _, f := range files {
+		file, _ := ioutil.ReadFile(path + f.Name())
+
+		sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
+		sFileData := b64.StdEncoding.EncodeToString(file)
+
+		node4.responsibleForFile(sFileName, sFileData)
+	}
+
 	fmt.Print("")
 	time.Sleep(10000*time.Millisecond)
 	
-	//node3.printMyFingers()
-	//fmt.Println("#####################", node3.responsible("bf06670af35ed4abcadd95abe8079568f4df38e6"), "#####################")
-	//node3.kill()
+	node7.kill()
+
+	//time.Sleep(7000*time.Millisecond)
+
+	//node0.kill()
+
+	time.Sleep(7000*time.Millisecond)
+
+	node7.alive(node1)
 
 	time.Sleep(6000*time.Millisecond)
-	//node3.alive(node1)
 
+	//node0.alive(node1)
 
-	//node0.transport.listen()
 	time.Sleep(2000*time.Second)
+
 }

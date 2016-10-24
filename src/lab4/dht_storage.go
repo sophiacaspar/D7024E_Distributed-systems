@@ -21,6 +21,7 @@ func (dhtNode *DHTNode) makeFolder() {
 	}
 }
 
+
 /* createUploadMsg Adds the file to the nodes folder as the name of the node 
 and the filename */
 func (dhtNode *DHTNode) addFile(msg *Msg) {
@@ -167,7 +168,7 @@ func (dhtNode *DHTNode) checkIfReplicate() {
 		}
 	}
 }
-	
+
 /* Creates a new file named dhtNode.nodeId in folder "path" */
 func createfile(path string, fileData string) {
 	err := ioutil.WriteFile(path, []byte(fileData), 0777)
@@ -210,6 +211,7 @@ func (dhtNode *DHTNode) replicate(msg *Msg) {
 	dhtNode.checkfolder(nodeId)
 }
 
+
 /* If a node notice a predesessor is offline, it will take over 
 responsebility for that file and move the file from it's backup 
 folder to "/" */
@@ -220,7 +222,7 @@ func (dhtNode *DHTNode) takeResponsibility() {
 
 	/* If folder exist*/
 	if Exists(path) {
-		fmt.Println("Takes responsebility of file in: " + path + "\n")
+		fmt.Println("Takes responsebility of file in: " + path)
 		files, err := ioutil.ReadDir(path)
 
 		if err != nil {
@@ -377,4 +379,69 @@ func (dhtNode *DHTNode) responsibleForFile(filename, data string) {
 					return
 				}
 			}
+}
+
+/* Gets all files stored on nodes */
+func (dhtNode *DHTNode) getFiles(msg *Msg) {
+	if dhtNode.successor[0] != msg.Origin {
+		dhtNode.goThroughDir(msg)
+		fmt.Println(dhtNode.transport.bindAddress, "sends forward to", dhtNode.successor[0])
+		next := createGetFilesMsg(msg.Origin, dhtNode.transport.bindAddress, dhtNode.successor[0])
+		go dhtNode.transport.send(next)
+	} else {
+		d := false
+		d = dhtNode.goThroughDir(msg)
+		if d == true {
+			m := createFileResponseMsg(dhtNode.transport.bindAddress, msg.Origin, "DONE", "DONE")
+			go dhtNode.transport.send(m)
+			//m := createAckMsg("ack", dhtNode.transport.bindAddress, msg.Origin)
+			//go dhtNode.transport.send(m)
+		}
+	}
+}
+
+/* Goed through each directory and returns files to website */
+func (dhtNode *DHTNode) goThroughDir(msg *Msg) bool {
+	path := "dataFolder/" + dhtNode.nodeId + "/" 
+	files, _ := ioutil.ReadDir(path)
+	for _, f := range files {
+		if !f.IsDir() {
+			fileData, _ := ioutil.ReadFile(path + f.Name())
+			sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
+			sFileData := b64.StdEncoding.EncodeToString(fileData)
+			m := createFileResponseMsg(dhtNode.transport.bindAddress, msg.Origin, sFileName, sFileData)
+			go dhtNode.transport.send(m)
+		} 
+	}
+	return true
+}
+
+/* Checks who's responsible for the file that is going to be updated */
+func (dhtNode *DHTNode) startUpdateFile(filename, data string) {
+    hash := generateNodeId(filename)
+    dhtNode.lookup(hash)
+    waitResponse := time.NewTimer(time.Millisecond*1000)
+        for {
+            select {
+                case n := <- dhtNode.fingerMemory:
+                    sFileName := b64.StdEncoding.EncodeToString([]byte(filename))
+					sFileData := b64.StdEncoding.EncodeToString([]byte(data))
+                    msg := createUpdateFileMsg("updateFile", dhtNode.transport.bindAddress, n.ip, sFileName, sFileData)  
+                    go func () { dhtNode.transport.send(msg)}()
+                    return
+                case  <- waitResponse.C:
+                    fmt.Println("^^^^^^^^^^^^^^^^^^^ UPDATE TIMEOUT ^^^^^^^^^^^^^^")
+                    return
+            }
+        }
+}
+
+/* Update content in file */
+func (dhtNode *DHTNode) updateFile(msg *Msg) {
+	FileName, _ := b64.StdEncoding.DecodeString(msg.FileName)
+	Data, _ := b64.StdEncoding.DecodeString(msg.Data)
+	path := "dataFolder/" + dhtNode.nodeId + "/" + string(FileName)
+	ioutil.WriteFile(path, []byte(Data), 0777)
+	m := createReplicateMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], msg.FileName, msg.Data)
+	go func () { dhtNode.transport.send(m)}()
 }
