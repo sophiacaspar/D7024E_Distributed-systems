@@ -118,7 +118,6 @@ func (transport *Transport) init_msgQueue() {
 							go transport.dhtNode.getFiles(m)
 						case "fileResponse":
 							go func(){
-								fmt.Println("sends file", m.FileName, "to", transport.bindAddress)
 								transport.dhtNode.fileResponse <- &File{m.FileName, m.Data}
 							}()
 							

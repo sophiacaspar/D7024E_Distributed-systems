@@ -325,7 +325,7 @@ func (dhtNode *DHTNode) lookupNext(msg *Msg) {
 		go dhtNode.transport.send(m)
     	//fmt.Println(dhtNode.contact.port, "is not responsible, sending to", m.Dst)
 
-    	waitResponse.Reset(time.Millisecond * 300)
+    	waitResponse.Reset(time.Millisecond * 1000)
     	for {
 			select {
 				case <-dhtNode.lookupQueue:

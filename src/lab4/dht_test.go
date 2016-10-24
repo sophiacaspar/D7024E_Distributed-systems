@@ -122,19 +122,22 @@ func TestDHT1(t *testing.T) {
 	}
 */
 	fmt.Print("")
-	time.Sleep(10000*time.Millisecond)
-	
+	time.Sleep(8000*time.Millisecond)
+	fmt.Println("IS NODE 0 RESPONSIBLE FOR HASH?", node0.responsible("ba6bb37f774e7d2045da5a3abbb3d1687927667a"))
+	fmt.Println("IS NODE 6 RESPONSIBLE FOR HASH?", node6.responsible("ba6bb37f774e7d2045da5a3abbb3d1687927667a"))
 	//node3.printMyFingers()
 	//fmt.Println("#####################", node3.responsible("bf06670af35ed4abcadd95abe8079568f4df38e6"), "#####################")
-	//node4.kill()
+	node0.kill()
 
 	time.Sleep(6000*time.Millisecond)
+	//fmt.Println("IS NODE 0 RESPONSIBLE FOR HASH?", node0.responsible("ba6bb37f774e7d2045da5a3abbb3d1687927667a"))
+	fmt.Println("IS NODE 6 RESPONSIBLE FOR HASH?", node6.responsible("ba6bb37f774e7d2045da5a3abbb3d1687927667a"))
 
 	//node5.kill()
 
 	//time.Sleep(3000*time.Millisecond)
 
-	//node4.alive(node1)
+	node7.alive(node1)
 
 	//time.Sleep(6000*time.Millisecond)
 
