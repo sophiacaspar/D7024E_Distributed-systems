@@ -131,19 +131,19 @@ func TestDHT1(t *testing.T) {
 	
 	//node3.printMyFingers()
 	//fmt.Println("#####################", node3.responsible("bf06670af35ed4abcadd95abe8079568f4df38e6"), "#####################")
+	node7.kill()
+
+	time.Sleep(7000*time.Millisecond)
+
 	node0.kill()
 
 	time.Sleep(7000*time.Millisecond)
 
-	/*node6.kill()
+	node7.alive(node1)
 
-	time.Sleep(7000*time.Millisecond)*/
+	time.Sleep(6000*time.Millisecond)
 
 	node0.alive(node1)
-
-	/*time.Sleep(6000*time.Millisecond)
-
-	node6.alive(node1)*/
 
 	time.Sleep(2000*time.Second)
 

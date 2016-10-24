@@ -232,15 +232,15 @@ func createUploadMsg(origin, dst, filename string, data string) *Msg{
  	return Msg
  }
 
-func createCheckReplicateMsg(origin, dst string) *Msg{
+ func createDeletBackupeMsg(origin, dst, filename string) *Msg{
  	Msg := &Msg{}
- 	Msg.Type = "checkRep"
+ 	Msg.Type = "delBackup"
  	Msg.Origin = origin
  	Msg.Key = ""
  	Msg.Src = ""
  	Msg.Dst = dst
  	Msg.LightNode = [2]string{}
- 	Msg.FileName = ""
+ 	Msg.FileName = filename
  	Msg.Data = ""
  	return Msg
  }

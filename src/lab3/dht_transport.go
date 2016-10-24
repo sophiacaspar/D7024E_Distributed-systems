@@ -107,8 +107,8 @@ func (transport *Transport) init_msgQueue() {
 							go transport.dhtNode.deleteFileSucc(m)
 						case "deleteFile":
 							go transport.dhtNode.deleteFile(m)	
-						case "checkRep":
-							go transport.dhtNode.checkIfReplicate(m)
+						case "delBackup":
+							go transport.dhtNode.deleteBackupSucc(m)
 					}
 				} 
 			}	
