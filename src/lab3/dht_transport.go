@@ -101,12 +101,14 @@ func (transport *Transport) init_msgQueue() {
 							go transport.dhtNode.addFile(m)
 						case "replicate":
 							go transport.dhtNode.replicate(m)
-						case "getBackup":
-							go transport.dhtNode.getFileBackup(m)
-						case "getsuccData":
-							go transport.dhtNode.newPredecessor(m)
+						case "checkSuccData":
+							go transport.dhtNode.getSuccData(m)
 						case "deleteFileSucc":
 							go transport.dhtNode.deleteFileSucc(m)
+						case "deleteFile":
+							go transport.dhtNode.deleteFile(m)	
+						case "checkRep":
+							go transport.dhtNode.checkIfReplicate(m)
 					}
 				} 
 			}	

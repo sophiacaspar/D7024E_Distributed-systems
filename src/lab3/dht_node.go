@@ -26,7 +26,6 @@ type DHTNode struct {
 	fingerMemory	chan *Finger
 }
 
-
 type Task struct {
 	taskType 	string
 	msg 		*Msg
@@ -108,7 +107,6 @@ func (dhtNode *DHTNode) heartbeatTimer() {
 		}	
 }
 
-
 // JOIN
 func (dhtNode *DHTNode) addToRing(msg *Msg) {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
@@ -125,19 +123,22 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 			f := createInitFingerMsg(nodeAddress, dhtNode.successor[0], [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
 			go func () { dhtNode.transport.send(f)}() 
 
+			//time.Sleep(1000*time.Millisecond)
+			//NewMsg := createCheckSuccDataMsg(dhtNode.transport.bindAddress, dhtNode.successor[0])
+			//go dhtNode.transport.send(NewMsg)
+
 	} else {
 		forwardToSucc := createJoinMsg(dhtNode.successor[0], msg.LightNode)
 		go func () { dhtNode.transport.send(forwardToSucc)} () 
 	}
-
-	NewMsg := createCheckSuccDataMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], dhtNode.predecessor[0])
-	go func () {dhtNode.transport.send(NewMsg)}()
 }
-
 
 func (dhtNode *DHTNode) setPredecessor(msg *Msg){
         dhtNode.predecessor[0] = msg.LightNode[0]
 		dhtNode.predecessor[1] = msg.LightNode[1]
+		
+		dhtNode.takeResponsibility()
+
 		//fmt.Println(dhtNode.nodeId, " predecessor: ", dhtNode.predecessor)
 }
 
@@ -145,6 +146,10 @@ func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
 		dhtNode.successor[0] = msg.LightNode[0]
 		dhtNode.successor[1] = msg.LightNode[1]
 		fmt.Println(dhtNode.contact.port, "successor is", msg.LightNode[0])
+			
+		fmt.Println("Gets data from successor " + dhtNode.successor[0] + "\n")
+		NewMsg := createCheckSuccDataMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
+		go dhtNode.transport.send(NewMsg)
 }
 
 func (dhtNode *DHTNode) getPredecessor(msg *Msg) {
@@ -213,7 +218,9 @@ func (dhtNode *DHTNode) stabilize(){
 					dhtNode.successor[0] = r.LightNode[0]
 					dhtNode.successor[1] = r.LightNode[1]
 					fmt.Println(dhtNode.contact.port, "stabilized successor is", r.LightNode[0])
+
 				}
+				
 				// I think I am your predecessor, update!
 				notify := createNotifyMsg(nodeAddress, dhtNode.successor[0], [2]string{nodeAddress, dhtNode.nodeId})
 				go dhtNode.transport.send(notify)
@@ -227,7 +234,6 @@ func (dhtNode *DHTNode) stabilize(){
 				dhtNode.updateSuccessor(dhtNode.successor[1])
 				//dhtNode.successor[0] = dhtNode.fingers.fingers[(size-1)].ip
 				//dhtNode.successor[1] = dhtNode.fingers.fingers[(size-1)].id
-
 				return
 		}
 	}
@@ -286,7 +292,6 @@ func (dhtNode *DHTNode) responsible(key string) bool{
 	return (between([]byte(dhtNode.predecessor[1]),[]byte(dhtNode.nodeId), []byte(key)))
 }
 
-
 func (dhtNode *DHTNode) lookup(key string) {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	var m *Msg
@@ -300,7 +305,6 @@ func (dhtNode *DHTNode) lookup(key string) {
 		go dhtNode.transport.send(m)
     }
 }
-
 
 func (dhtNode *DHTNode) lookupNext(msg *Msg) {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
@@ -333,8 +337,7 @@ func (dhtNode *DHTNode) lookupNext(msg *Msg) {
 					return
 				}
 			}
-    	}
-		
+    	}	
 }
 
 // If responsible node is'nt alive, then check next finger instead
@@ -389,7 +392,6 @@ func (dhtNode *DHTNode) fingerLookup(msg *Msg) {
 
 	}
 
-
 // Checks if my predecessor is alive, if not then reset my predecessors
 func (dhtNode *DHTNode) heartbeat() {
 	timeout := time.Millisecond*1000
@@ -409,7 +411,6 @@ func (dhtNode *DHTNode) heartbeat() {
 					return
 				case  <- waitResponse.C:
 					fmt.Println("heartbeat timeout", dhtNode.contact.port)
-					dhtNode.takeResponsibility(dhtNode.predecessor[0])
 					dhtNode.predecessor[0] = ""
 					dhtNode.predecessor[1] = ""
 					dhtNode.createTask("stabilize", nil)
@@ -428,4 +429,12 @@ func (dhtNode *DHTNode) kill() {
 	dhtNode.successor[1] = ""
 	dhtNode.predecessor[0] = ""
 	dhtNode.predecessor[1] = ""
+}
+
+func getHashFile() {
+
+
+
+
+	
 }
