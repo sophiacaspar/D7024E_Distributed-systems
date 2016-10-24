@@ -118,14 +118,9 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 			dhtNode.successor[1] = msg.LightNode[1]
 			fmt.Println(dhtNode.contact.port, "successor is", msg.LightNode[0])
 
-
 			dhtNode.initFingerTable(&Msg{"", "", "", "", "", dhtNode.successor, "", ""})
 			f := createInitFingerMsg(nodeAddress, dhtNode.successor[0], [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
 			go func () { dhtNode.transport.send(f)}() 
-
-			//time.Sleep(1000*time.Millisecond)
-			//NewMsg := createCheckSuccDataMsg(dhtNode.transport.bindAddress, dhtNode.successor[0])
-			//go dhtNode.transport.send(NewMsg)
 
 	} else {
 		forwardToSucc := createJoinMsg(dhtNode.successor[0], msg.LightNode)
@@ -135,10 +130,7 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 
 func (dhtNode *DHTNode) setPredecessor(msg *Msg){
         dhtNode.predecessor[0] = msg.LightNode[0]
-		dhtNode.predecessor[1] = msg.LightNode[1]
-		
-		dhtNode.takeResponsibility()
-
+		dhtNode.predecessor[1] = msg.LightNode[1]	
 		//fmt.Println(dhtNode.nodeId, " predecessor: ", dhtNode.predecessor)
 }
 
@@ -147,7 +139,6 @@ func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
 		dhtNode.successor[1] = msg.LightNode[1]
 		fmt.Println(dhtNode.contact.port, "successor is", msg.LightNode[0])
 			
-		fmt.Println("Gets data from successor " + dhtNode.successor[0] + "\n")
 		NewMsg := createCheckSuccDataMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
 		go dhtNode.transport.send(NewMsg)
 }
@@ -243,12 +234,13 @@ func (dhtNode *DHTNode) stabilize(){
 // Update predecessor if node should be between dhtnode and its predecessor
 func (dhtNode *DHTNode) notify(msg *Msg){
 	if ((dhtNode.predecessor[0] == "") || between([]byte (dhtNode.predecessor[1]), []byte (dhtNode.nodeId), []byte (msg.LightNode[1]))){
-		tempPred := dhtNode.predecessor
+
 		dhtNode.predecessor[0] = msg.LightNode[0]
 		dhtNode.predecessor[1] = msg.LightNode[1]
-		if tempPred[0] != msg.LightNode[0] {
-			fmt.Println("00000000000000000000000000000 NOT ALIKE")
-		}
+
+		go dhtNode.checkIfReplicate()
+		m := createDeletBackupeMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], dhtNode.predecessor[1])
+		go dhtNode.transport.send(m)
 	}
 	fmt.Println(dhtNode.predecessor[0], "is predecessor to", dhtNode.contact.port)
 }
@@ -415,6 +407,7 @@ func (dhtNode *DHTNode) heartbeat() {
 					return
 				case  <- waitResponse.C:
 					fmt.Println("heartbeat timeout", dhtNode.contact.port)
+					dhtNode.takeResponsibility()
 					dhtNode.predecessor[0] = ""
 					dhtNode.predecessor[1] = ""
 					dhtNode.createTask("stabilize", nil)
@@ -433,12 +426,4 @@ func (dhtNode *DHTNode) kill() {
 	dhtNode.successor[1] = ""
 	dhtNode.predecessor[0] = ""
 	dhtNode.predecessor[1] = ""
-}
-
-func getHashFile() {
-
-
-
-
-	
 }
