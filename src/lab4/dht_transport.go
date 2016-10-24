@@ -92,7 +92,6 @@ func (transport *Transport) init_msgQueue() {
 								transport.dhtNode.transport.send(createResponseMsg(m.Dst, m.Origin, [2]string{transport.bindAddress, transport.dhtNode.nodeId}))
 							}
 						case "ack":
-							fmt.Println("put ack in responsequeue")
 							go func() {
 								transport.dhtNode.responseQueue <- m
 								}()
@@ -104,14 +103,14 @@ func (transport *Transport) init_msgQueue() {
 							go transport.dhtNode.addFile(m)
 						case "replicate":
 							go transport.dhtNode.replicate(m)
-						case "getBackup":
-							go transport.dhtNode.getFileBackup(m)
-						case "getsuccData":
-							go transport.dhtNode.newPredecessor(m)
+						case "checkSuccData":
+							go transport.dhtNode.getSuccData(m)
 						case "deleteFileSucc":
 							go transport.dhtNode.deleteFileSucc(m)
 						case "deleteFile":
 							go transport.dhtNode.deleteFile(m)
+						case "delBackup":
+							go transport.dhtNode.deleteBackupSucc(m)
 						case "updateFile":
 							go transport.dhtNode.updateFile(m)
 						case "getFiles":

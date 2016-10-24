@@ -72,15 +72,17 @@ func loadWebsite(filename string) string{
 *** different commands (get, post etc) ***
 *****************************************/
 func (dhtNode *DHTNode) startWebserver() {
-    router := httprouter.New()
-    router.GET("/", dhtNode.IndexHandler)
-    router.GET("/storage", dhtNode.GetHandler)
-    router.POST("/storage", dhtNode.PostHandler)
-    router.PUT("/storage/:KEY", dhtNode.PutHandler)
-    router.DELETE("/storage/:KEY", dhtNode.DeleteHandler)
+        router := httprouter.New()
+        router.GET("/", dhtNode.IndexHandler)
+        router.GET("/storage", dhtNode.GetHandler)
+        router.POST("/storage", dhtNode.PostHandler)
+        router.PUT("/storage/:KEY", dhtNode.PutHandler)
+        router.DELETE("/storage/:KEY", dhtNode.DeleteHandler)
 
-    log.Fatal(http.ListenAndServe(dhtNode.contact.ip+":"+dhtNode.contact.port, router))
+        log.Fatal(http.ListenAndServe(dhtNode.contact.ip+":"+dhtNode.contact.port, router))
+
 }
+
 
 
 /*****************************************
@@ -102,7 +104,6 @@ func (dhtNode *DHTNode) GetHandler(w http.ResponseWriter, r *http.Request, _ htt
                         fileList = append(fileList, f)
                         waitResponse.Reset(time.Millisecond*700)
                     } else {
-                        fmt.Println("we should be done")
                         done = true
                     }
                 case  <- waitResponse.C:
@@ -144,10 +145,10 @@ func (dhtNode *DHTNode) PostHandler(w http.ResponseWriter, r *http.Request, ps h
     if err != nil {
         log.Fatal(err)
     }
-    //sFileName := b64.StdEncoding.EncodeToString([]byte(file.Filename))
-    //sFileData := b64.StdEncoding.EncodeToString([]byte(file.Data))
+    sFileName := b64.StdEncoding.EncodeToString([]byte(file.Filename))
+    sFileData := b64.StdEncoding.EncodeToString([]byte(file.Data))
 
-    dhtNode.responsibleForFile(file.Filename, file.Data)
+    dhtNode.responsibleForFile(sFileName, sFileData)
     //msg := createUploadMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], sFileName, sFileData)  
     //go func () { dhtNode.transport.send(msg)}()
 }

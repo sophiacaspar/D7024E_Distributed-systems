@@ -132,9 +132,6 @@ func (dhtNode *DHTNode) addToRing(msg *Msg) {
 		forwardToSucc := createJoinMsg(dhtNode.successor[0], msg.LightNode)
 		go func () { dhtNode.transport.send(forwardToSucc)} () 
 	}
-
-	NewMsg := createCheckSuccDataMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], dhtNode.predecessor[0])
-	go func () {dhtNode.transport.send(NewMsg)}()
 }
 
 
@@ -148,6 +145,9 @@ func (dhtNode *DHTNode) setSuccessor(msg *Msg) {
 		dhtNode.successor[0] = msg.LightNode[0]
 		dhtNode.successor[1] = msg.LightNode[1]
 		fmt.Println(dhtNode.contact.port, "successor is", msg.LightNode[0])
+
+		NewMsg := createCheckSuccDataMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
+		go dhtNode.transport.send(NewMsg)
 }
 
 func (dhtNode *DHTNode) getPredecessor(msg *Msg) {
@@ -242,6 +242,10 @@ func (dhtNode *DHTNode) notify(msg *Msg){
 	if ((dhtNode.predecessor[0] == "") || between([]byte (dhtNode.predecessor[1]), []byte (dhtNode.nodeId), []byte (msg.LightNode[1]))){
 		dhtNode.predecessor[0] = msg.LightNode[0]
 		dhtNode.predecessor[1] = msg.LightNode[1]
+
+		go dhtNode.checkIfReplicate()
+		m := createDeletBackupeMsg(dhtNode.transport.bindAddress, dhtNode.successor[0], dhtNode.predecessor[1])
+		go dhtNode.transport.send(m)
 	}
 	fmt.Println(dhtNode.predecessor[0], "is predecessor to", dhtNode.contact.port)
 }
@@ -408,13 +412,10 @@ func (dhtNode *DHTNode) heartbeat() {
 		for {
 			select {
 				case <- dhtNode.heartbeatQueue:
-				//case <- dhtNode.heartbeatQueue:
-					//fmt.Println(dhtNode.contact.port, "predecessor is alive: ", dhtNode.predecessor[0])
-					//fmt.Println(dhtNode.contact.port, "heartbeat respond from", dhtNode.predecessor[0])
 					return
 				case  <- waitResponse.C:
 					fmt.Println("heartbeat timeout", dhtNode.contact.port)
-					dhtNode.takeResponsibility(dhtNode.predecessor[0])
+					dhtNode.takeResponsibility()
 					dhtNode.predecessor[0] = ""
 					dhtNode.predecessor[1] = ""
 					dhtNode.createTask("stabilize", nil)

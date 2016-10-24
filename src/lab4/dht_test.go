@@ -8,8 +8,8 @@ import (
 	"testing"
 	"time"
 	//"os"
-	//"io/ioutil"
-	//b64 "encoding/base64"
+	"io/ioutil"
+	b64 "encoding/base64"
 )
 
 // dhtNode sends request to master of ring: please add me somewhere
@@ -44,42 +44,10 @@ func (dhtNode *DHTNode) alive(master *DHTNode) {
 		go dhtNode.transport.listen()
 		//dhtNode.startServer()
 		dhtNode.joinReq(master)
-
-
-		dhtNode.newSuccessor()
-		time.Sleep(300*time.Millisecond)
-		nextmsg := createGetBackupMsg(dhtNode.transport.bindAddress, dhtNode.successor[0])
-		go func () {dhtNode.transport.send(nextmsg)}() 
-
-		fmt.Print("--------------------------------------------" + "\n")
-		fmt.Print(dhtNode.transport.bindAddress + " gets data and file back if it exist in successor " + dhtNode.successor[0] + "\n")
-		fmt.Print("--------------------------------------------" + "\n")
-
 	} 
 }
 
 func TestDHT1(t *testing.T) {
-/*
-	id0 := "00"
-    id1 := "01"
-    id2 := "02"
-    id3 := "03"
-    id4 := "04"
-    id5 := "05"
-    id6 := "06"
-    id7 := "07"
-
-
-    node0 := startNode(&id0, "1110")
-    node1 := startNode(&id1, "1111")
-    node2 := startNode(&id2, "1112")
-    node3 := startNode(&id3, "1113")
-    node4 := startNode(&id4, "1114")
-    node5 := startNode(&id5, "1115")
-    node6 := startNode(&id6, "1116")
-    node7 := startNode(&id7, "1117")
-*/
-
 	node0 := startNode(nil, "1110")
     node1 := startNode(nil, "1111")
     node2 := startNode(nil, "1112")
@@ -98,9 +66,10 @@ func TestDHT1(t *testing.T) {
 	node4.joinReq(node1)
 
 
-	//path := "/Users/Sophia/Documents/Coding/D7024E/D7024E_Distributed-systems/src/lab3/file/"
-	/*
-	path := "/Users/Sophia/workshop/go/src/lab4/file/"
+	path := "/Users/Sophia/workshop/go/src/lab3/file/"
+	time.Sleep(6000*time.Millisecond)
+
+	
 	files, err := ioutil.ReadDir(path)
 
 	if err != nil {
@@ -110,36 +79,29 @@ func TestDHT1(t *testing.T) {
 	for _, f := range files {
 		file, _ := ioutil.ReadFile(path + f.Name())
 
-		nodeId := generateNodeId(node4.transport.bindAddress)
+		sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
+		sFileData := b64.StdEncoding.EncodeToString(file)
 
-		//sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
-		//sFileData := b64.StdEncoding.EncodeToString(file)
-
-		fmt.Print("--------------------------------------------" + "\n")
-		fmt.Print("Send data: " + string(file) + " and file: " + f.Name() + " to: " + node4.transport.bindAddress + " with NodeId: " + nodeId + "\n")
-		fmt.Print("--------------------------------------------" + "\n")
-		node3.responsibleForFile([]byte(f.Name), []byte(file))
+		node4.responsibleForFile(sFileName, sFileData)
 	}
-*/
+
 	fmt.Print("")
 	time.Sleep(10000*time.Millisecond)
 	
-	//node3.printMyFingers()
-	//fmt.Println("#####################", node3.responsible("bf06670af35ed4abcadd95abe8079568f4df38e6"), "#####################")
-	//node4.kill()
+	node7.kill()
+
+	//time.Sleep(7000*time.Millisecond)
+
+	//node0.kill()
+
+	time.Sleep(7000*time.Millisecond)
+
+	node7.alive(node1)
 
 	time.Sleep(6000*time.Millisecond)
 
-	//node5.kill()
+	//node0.alive(node1)
 
-	//time.Sleep(3000*time.Millisecond)
-
-	//node4.alive(node1)
-
-	//time.Sleep(6000*time.Millisecond)
-
-	//node5.alive(node1)
-	
 	time.Sleep(2000*time.Second)
 
 }

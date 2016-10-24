@@ -206,33 +206,31 @@ func createUploadMsg(origin, dst, filename string, data string) *Msg{
  	return Msg
  }
 
- func createCheckSuccDataMsg(origin, dst, oldPredecessor string) *Msg{
+ func createCheckSuccDataMsg(origin, dst string, ln [2]string) *Msg{
  	Msg := &Msg{}
- 	Msg.Type = "getsuccData"
+ 	Msg.Type = "checkSuccData"
  	Msg.Origin = origin
  	Msg.Key = ""
+ 	Msg.Src = ""
  	Msg.Dst = dst
- 	Msg.Src = oldPredecessor
- 	Msg.LightNode = [2]string{}
+ 	Msg.LightNode = ln
 	Msg.FileName = ""
 	Msg.Data = ""
  	return Msg
  }
 
- func createGetBackupMsg(origin, dst string) *Msg{
+func createDeletBackupeMsg(origin, dst, filename string) *Msg{
  	Msg := &Msg{}
- 	Msg.Type = "getBackup"
+ 	Msg.Type = "delBackup"
  	Msg.Origin = origin
  	Msg.Key = ""
  	Msg.Src = ""
  	Msg.Dst = dst
  	Msg.LightNode = [2]string{}
- 	Msg.FileName = ""
+ 	Msg.FileName = filename
  	Msg.Data = ""
  	return Msg
  }
-
-
   func createDeleteFileMsg(t, origin, dst, filename string) *Msg{
  	Msg := &Msg{}
  	Msg.Type = t

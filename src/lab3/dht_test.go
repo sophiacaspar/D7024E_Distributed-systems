@@ -42,27 +42,6 @@ func (dhtNode *DHTNode) alive(master *DHTNode) {
 }
 
 func TestDHT1(t *testing.T) {
-/*
-	id0 := "00"
-    id1 := "01"
-    id2 := "02"
-    id3 := "03"
-    id4 := "04"
-    id5 := "05"
-    id6 := "06"
-    id7 := "07"
-
-
-    node0 := startNode(&id0, "1110")
-    node1 := startNode(&id1, "1111")
-    node2 := startNode(&id2, "1112")
-    node3 := startNode(&id3, "1113")
-    node4 := startNode(&id4, "1114")
-    node5 := startNode(&id5, "1115")
-    node6 := startNode(&id6, "1116")
-    node7 := startNode(&id7, "1117")
-*/
-
 	node0 := startNode(nil, "1110")
     node1 := startNode(nil, "1111")
     node2 := startNode(nil, "1112")
