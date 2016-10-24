@@ -206,41 +206,41 @@ func createUploadMsg(origin, dst, filename string, data string) *Msg{
  	return Msg
  }
 
- func createCheckSuccDataMsg(origin, dst, oldPredecessor string) *Msg{
+ func createCheckSuccDataMsg(origin, dst string, ln [2]string) *Msg{
  	Msg := &Msg{}
- 	Msg.Type = "getsuccData"
+ 	Msg.Type = "checkSuccData"
  	Msg.Origin = origin
  	Msg.Key = ""
+ 	Msg.Src = ""
  	Msg.Dst = dst
- 	Msg.Src = oldPredecessor
- 	Msg.LightNode = [2]string{}
+ 	Msg.LightNode = ln
 	Msg.FileName = ""
 	Msg.Data = ""
  	return Msg
  }
 
- func createGetBackupMsg(origin, dst string) *Msg{
+ func createDeleteFileMsg(t, origin, dst, filename string) *Msg{
  	Msg := &Msg{}
- 	Msg.Type = "getBackup"
- 	Msg.Origin = origin
- 	Msg.Key = ""
- 	Msg.Src = ""
- 	Msg.Dst = dst
- 	Msg.LightNode = [2]string{}
- 	Msg.FileName = ""
- 	Msg.Data = ""
- 	return Msg
- }
-
- func createSuccFileDeleteMsg(origin, dst, filename string) *Msg{
- 	Msg := &Msg{}
- 	Msg.Type = "deleteFileSucc"
+ 	Msg.Type = t
  	Msg.Origin = origin
  	Msg.Key = ""
  	Msg.Src = ""
  	Msg.Dst = dst
  	Msg.LightNode = [2]string{}
  	Msg.FileName = filename
+ 	Msg.Data = ""
+ 	return Msg
+ }
+
+func createCheckReplicateMsg(origin, dst string) *Msg{
+ 	Msg := &Msg{}
+ 	Msg.Type = "checkRep"
+ 	Msg.Origin = origin
+ 	Msg.Key = ""
+ 	Msg.Src = ""
+ 	Msg.Dst = dst
+ 	Msg.LightNode = [2]string{}
+ 	Msg.FileName = ""
  	Msg.Data = ""
  	return Msg
  }

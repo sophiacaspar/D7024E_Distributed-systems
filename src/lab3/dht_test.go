@@ -37,17 +37,7 @@ func (dhtNode *DHTNode) alive(master *DHTNode) {
 		fmt.Println("<<<<<<<<<<<<<<<<<<<<<<",dhtNode.contact.port, "IS ALIVE <<<<<<<<<<<<<<<<<<<<<<")
 		dhtNode.online = true
 		dhtNode.startServer()
-		dhtNode.joinReq(master)
-		time.Sleep(300*time.Millisecond)
-		dhtNode.newSuccessor()
-		time.Sleep(300*time.Millisecond)
-		nextmsg := createGetBackupMsg(dhtNode.transport.bindAddress, dhtNode.successor[0])
-		go func () {dhtNode.transport.send(nextmsg)}() 
-
-		fmt.Print("--------------------------------------------" + "\n")
-		fmt.Print(dhtNode.transport.bindAddress + " gets data and file back if it exist in successor " + dhtNode.successor[0] + "\n")
-		fmt.Print("--------------------------------------------" + "\n")
-
+		dhtNode.joinReq(master)	
 	} 
 }
 
@@ -90,6 +80,8 @@ func TestDHT1(t *testing.T) {
 	node0.joinReq(node1)
 	node4.joinReq(node1)
 
+	time.Sleep(6000*time.Millisecond)
+
 	path := "/Users/Zengin/Documents/Coding/D7024E/D7024E_Distributed-systems/src/lab3/file/"
 	
 	files, err := ioutil.ReadDir(path)
@@ -101,17 +93,10 @@ func TestDHT1(t *testing.T) {
 	for _, f := range files {
 		file, _ := ioutil.ReadFile(path + f.Name())
 
-		nodeId := generateNodeId(node4.transport.bindAddress)
-
 		sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
 		sFileData := b64.StdEncoding.EncodeToString(file)
 
-		fmt.Print("--------------------------------------------" + "\n")
-		fmt.Print("Send data: " + string(file) + " and file: " + f.Name() + " to: " + node4.transport.bindAddress + " with NodeId: " + nodeId + "\n")
-		fmt.Print("--------------------------------------------" + "\n")
-		
-		msg := createUploadMsg(node3.transport.bindAddress, node4.transport.bindAddress, sFileName, sFileData)	
-		go func () { node3.transport.send(msg)}()
+		node4.responsibleForFile(sFileName, sFileData)
 	}
 /*
 	path2 := "/Users/Zengin/Documents/Coding/D7024E/D7024E_Distributed-systems/src/lab3/file2/"
@@ -138,25 +123,28 @@ func TestDHT1(t *testing.T) {
 		go func () { node4.transport.send(msg)}()
 	}
 */
+
+
+	//node5.alive(node1)
 	fmt.Print("")
 	time.Sleep(10000*time.Millisecond)
 	
 	//node3.printMyFingers()
 	//fmt.Println("#####################", node3.responsible("bf06670af35ed4abcadd95abe8079568f4df38e6"), "#####################")
-	node4.kill()
+	node0.kill()
 
-	time.Sleep(6000*time.Millisecond)
+	time.Sleep(7000*time.Millisecond)
 
-	//node5.kill()
+	/*node6.kill()
 
-	//time.Sleep(3000*time.Millisecond)
+	time.Sleep(7000*time.Millisecond)*/
 
-	node4.alive(node1)
+	node0.alive(node1)
 
-	//time.Sleep(6000*time.Millisecond)
+	/*time.Sleep(6000*time.Millisecond)
 
-	//node5.alive(node1)
-	
+	node6.alive(node1)*/
+
 	time.Sleep(2000*time.Second)
 
 }
