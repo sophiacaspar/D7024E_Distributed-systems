@@ -1,0 +1,164 @@
+<!-- JAVASCRIPT SAVED IN HTML FILE TO GET THE WHOLE WEBPAGE LOADED EASIER VIA GOLANG -->
+
+<html>
+<head>
+<script>
+/** get all files from server everytime the website starts **/
+window.onload = getFiles
+
+
+/*****************************************
+*** Sends content in file to server    ***
+*****************************************/
+function startUpload(data){
+    var xhr = new XMLHttpRequest();
+    console.log(data);
+      //data.file = event.target.result; 
+      xhr.onload = function() {
+            if (xhr.status == 200) {
+                location.reload();      // reloads page
+                alert("Success! Upload completed");
+            } else {
+                alert("Error! Upload failed");
+            }
+        };
+        xhr.onerror = function() {
+            alert("Error! Upload failed.");
+        };
+    
+  xhr.open('POST', 'http://{{.Address}}/storage/', true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.send(JSON.stringify(data));
+}
+
+/*****************************************
+*** Reads the text in the file that is ***
+*** uploaded and sends the content to  ***
+*** startUpload                        ***
+*****************************************/
+function readFile(){
+    var file = document.getElementById("newfile").files[0];
+    var readFile = new FileReader();
+    var data = {};
+    data.filename = file.name;
+    
+    function success(event){
+        data.data = event.target.result; 
+        startUpload(data)
+    };
+    readFile.readAsText(file);
+    // function call to success after file is read, no () needed
+    readFile.onload = success;
+}
+
+/*****************************************
+*** Prints out each file in the server ***
+*** with a open- and a delete-button   ***
+*****************************************/
+function addFiles(files){
+  if (files != null) {
+    files.forEach(function(file){
+        console.log(file);
+        document.getElementById('content').innerHTML += "<li>" + file.Filename + "<button style='margin-left:10px;' onclick='openFile(\"" + file.Filename + "\",\"" + file.Data + "\")'>Open</button> <button onclick='deleteData(\"" + file.Filename + "\")'>Delete</button></li>";
+    }); 
+  }
+}
+
+/*****************************************
+*** Handles opening of a file to show  ***
+*** content on website                 ***
+*****************************************/
+function openFile(filename, filedata){
+    document.getElementById('openFile').innerHTML = "File content for '" + filename + "'"
+    document.getElementById('fileContent').value = filedata;
+    document.getElementById('fileContent').name = filename;
+}
+
+
+/*****************************************
+*** Gets all stored files on server to ***
+*** add them on website                ***
+*****************************************/
+function getFiles(){
+    var xhr = new XMLHttpRequest();
+
+    xhr.onload = function(event) {
+        if (xhr.status == 200) {
+            
+            var data = event.target.response;
+            data = JSON.parse(data);
+            addFiles(data.Files);
+            console.log(data);
+          //location.reload();
+          //alert("Delete succeeded");
+        
+        } else {
+          alert("Error! Get files failed");
+        }
+    };
+      xhr.onerror = function() {
+        alert("Error! Get file failed. Cannot connect to server.");
+    };
+        
+    xhr.open('GET', 'http://{{.Address}}/storage/', false);
+    xhr.setRequestHeader("Content-Type", "application/json");
+    xhr.send(null);
+}
+
+/******************************************
+*** When a file is open and the content ***
+*** should be updated on server         ***
+******************************************/
+function updateData(){
+    var xhr = new XMLHttpRequest();
+    var textArea = document.getElementById("fileContent");
+    var data = {};
+    data.data = textArea.value;
+
+    console.log(data)
+      //data.file = event.target.result; 
+      xhr.onload = function() {
+            if (xhr.status == 200) {
+                location.reload();
+                alert("Success! Update completed");
+            } else {
+                alert("Error! Update failed");
+            }
+        };
+        xhr.onerror = function() {
+            alert("Error! Update failed.");
+        };
+    
+  xhr.open('PUT', 'http://{{.Address}}/storage/' + textArea.name, true);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.send(JSON.stringify(data));
+}
+
+/*****************************************
+*** Deletes a file from the website    ***
+*** and later on server                ***
+*****************************************/
+function deleteData(filename){
+    var xhr = new XMLHttpRequest();
+
+      //data.file = event.target.result; 
+      xhr.onload = function() {
+            if (xhr.status == 200) {
+                location.reload();
+                alert("Success! Delete completed");
+            } else {
+                alert("Error! Delete failed");
+            }
+        };
+        xhr.onerror = function() {
+            alert("Error! Delete failed.");
+        };
+    
+  xhr.open('DELETE', 'http://{{.Address}}/storage/' + filename, false);
+  xhr.setRequestHeader("Content-Type", "application/json");
+  xhr.send(null);
+}
+
+</script>
+</head>
+</html>

@@ -2,7 +2,7 @@ package dht
 
 import "encoding/hex"
 
-const size int = 7 
+const size int = 160 
 type Finger_table struct {
 	fingers 	[size]*DHTNode
 

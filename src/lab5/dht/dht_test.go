@@ -13,8 +13,8 @@ import (
 )
 
 // dhtNode sends request to master of ring: please add me somewhere
-func (dhtNode *DHTNode) joinReq(master *DHTNode) {
-	msg := createJoinMsg(master.transport.bindAddress, [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
+func (dhtNode *DHTNode) joinReq(masterIP string) {
+	msg := createJoinMsg(masterIP, [2]string{dhtNode.transport.bindAddress, dhtNode.nodeId})
 	go func () { dhtNode.transport.send(msg)}() 
 	time.Sleep(time.Millisecond*500)
 }
@@ -47,7 +47,8 @@ func (dhtNode *DHTNode) alive(master *DHTNode) {
 	} 
 }
 
-func TestDHT1(t *testing.T) {
+func StartUp(port string) {
+	/*
 	node0 := startNode(nil, "1110")
     node1 := startNode(nil, "1111")
     node2 := startNode(nil, "1112")
@@ -65,47 +66,14 @@ func TestDHT1(t *testing.T) {
 	node0.joinReq(node1)
 	node4.joinReq(node1)
 
-	//Sophias path
-	//path := "/Users/Sophia/workshop/go/src/lab3/file/"
-	
-	// Eriks path
-	/*path := "/Users/Zengin/Documents/Coding/D7024E/D7024E_Distributed-systems/src/lab3/file/"
-	
-	time.Sleep(6000*time.Millisecond)
+*/
+	bootstrapnode := "localhost:1110"
+	ip := "localhost:" + port
+	node := startNode(nil, port)
 
-	
-	files, err := ioutil.ReadDir(path)
 
-	if err != nil {
-		panic(err)
+	if ip != bootstrapnode {
+		node.dht.JoinReq(bootstrapnode)
 	}
-
-	for _, f := range files {
-		file, _ := ioutil.ReadFile(path + f.Name())
-
-		sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
-		sFileData := b64.StdEncoding.EncodeToString(file)
-
-		node4.responsibleForFile(sFileName, sFileData)
-	}*/
-
-	fmt.Print("")
-	time.Sleep(10000*time.Millisecond)
-	
-	node7.kill()
-
-	//time.Sleep(7000*time.Millisecond)
-
-	//node0.kill()
-
-	time.Sleep(10000*time.Millisecond)
-
-	node7.alive(node1)
-
-	//time.Sleep(6000*time.Millisecond)
-
-	//node0.alive(node1)
-
-	time.Sleep(2000*time.Second)
 
 }
