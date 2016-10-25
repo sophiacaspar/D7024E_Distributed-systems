@@ -63,6 +63,13 @@ func TestDHT1(t *testing.T) {
 	path := "/Users/Sophia/workshop/go/src/lab3/file/"
 	time.Sleep(6000*time.Millisecond)
 
+<<<<<<< HEAD
+=======
+	//Sophias path
+	//path := "/Users/Sophia/workshop/go/src/lab3/file/"
+
+	path := "/Users/Zengin/Documents/Coding/D7024E/D7024E_Distributed-systems/src/lab3/file/"
+>>>>>>> fd2b172aafcceeeced8b50a3880f136038bfe4d6
 	
 	files, err := ioutil.ReadDir(path)
 

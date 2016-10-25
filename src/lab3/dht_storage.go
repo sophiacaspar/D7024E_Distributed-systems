@@ -112,6 +112,35 @@ func (dhtNode *DHTNode) getSuccData(msg *Msg) {
 	}
 }
 
+func (dhtNode *DHTNode) checkfolder(nodeId string) {
+path := "dataFolder/" + dhtNode.nodeId + "/"  + nodeId + "/" 
+path2 := "dataFolder/" + dhtNode.nodeId + "/"
+	
+if Exists(path) {
+	dir, err := ioutil.ReadDir(path)
+	fmt.Println(dhtNode.nodeId + " GOTO "+ path + "\n" )
+	if err != nil {
+		panic(err)
+	}
+		for _, f := range dir {
+			if f.Name() == ".DS_Store" {
+				os.Remove(path + f.Name())
+			} else {
+				files, _ := ioutil.ReadDir(path2)
+				for _, f2 := range files {
+					for _, f3 := range dir {
+						if !f.IsDir() && f3.Name() == f2.Name(){
+						fmt.Println("Remove file: "+ f3.Name() +" in "+ path2 + "\n" )
+						os.Remove(path2 + f2.Name())
+					}
+
+					}
+				}
+			}
+		}
+	}
+}
+
 func (dhtNode *DHTNode) checkIfReplicate() {
 	path := "dataFolder/" + dhtNode.nodeId + "/" 
 	
@@ -178,6 +207,7 @@ func (dhtNode *DHTNode) replicate(msg *Msg) {
 	} else {
 		createfile(path2, string(FileData))
 	}
+	dhtNode.checkfolder(nodeId)
 }
 
 /* If a node notice a predesessor is offline, it will take over 
@@ -190,7 +220,7 @@ func (dhtNode *DHTNode) takeResponsibility() {
 
 	/* If folder exist*/
 	if Exists(path) {
-		fmt.Println("Takes responsebility of file in: " + path)
+		fmt.Println("Takes responsebility of file in: " + path + "\n")
 		files, err := ioutil.ReadDir(path)
 
 		if err != nil {
