@@ -118,7 +118,6 @@ path2 := "dataFolder/" + dhtNode.nodeId + "/"
 	
 if Exists(path) {
 	dir, err := ioutil.ReadDir(path)
-	fmt.Println(dhtNode.nodeId + " GOTO "+ path + "\n" )
 	if err != nil {
 		panic(err)
 	}

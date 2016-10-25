@@ -5,7 +5,7 @@ package dht
 import (
 	//"fmt"
 	"testing"
-	//"time"
+	"time"
 
 )
 
@@ -22,7 +22,7 @@ func (master *DHTNode) lookupReq(t, key string, dhtNode *DHTNode) {
 }
 
 func TestDHT1(t *testing.T) {
-/*
+
 	id0 := "00"
     id1 := "01"
     id2 := "02"
@@ -40,8 +40,8 @@ func TestDHT1(t *testing.T) {
     node5 := makeDHTNode(&id5, "localhost", "1115")
     node6 := makeDHTNode(&id6, "localhost", "1116")
     node7 := makeDHTNode(&id7, "localhost", "1117")
-    */
-
+    
+/*
     node0 := makeDHTNode(nil, "localhost", "1110")
     node1 := makeDHTNode(nil, "localhost", "1111")
     node2 := makeDHTNode(nil, "localhost", "1112")
@@ -50,6 +50,7 @@ func TestDHT1(t *testing.T) {
     node5 := makeDHTNode(nil, "localhost", "1115")
     node6 := makeDHTNode(nil, "localhost", "1116")
     node7 := makeDHTNode(nil, "localhost", "1117")
+*/
 
 	node1.startServer()
 	node2.startServer()
@@ -70,21 +71,19 @@ func TestDHT1(t *testing.T) {
 	time.Sleep(10000*time.Millisecond)
 	msg := createPrintFingerMsg(node2.transport.bindAddress, node3.transport.bindAddress)
 	go func () { node2.transport.send(msg)}() 
+*/
 
-
-
-
-/*
 	time.Sleep(10000*time.Millisecond)
 	msg := createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress)
 	go func () { node1.transport.send(msg)}() 
 
+/*
 	time.Sleep(5000*time.Millisecond)
 	node1.lookupReq("fingerLookup", "10", node5)
-
+*/
 	//msg := createPrintMsg(node2.transport.bindAddress, node3.transport.bindAddress)
 	//go func () { node1.transport.send(msg)}() 
-*/
+
 
 	node0.transport.listen()
 
