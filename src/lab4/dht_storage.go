@@ -5,14 +5,10 @@ import (
 	"os"
 	"fmt"
 	"time"
-	/*"path/filepath"*/
 	b64 "encoding/base64"
 )
 
-/*
-At start, check if "dataFolder" exist.
-If not creates a new one with permission 0777
-*/
+/* At start, check if "dataFolder" exist. If not creates a new one with permission 0777 */
 func (dhtNode *DHTNode) makeFolder() {
 	path := "dataFolder/" + dhtNode.nodeId
 
@@ -21,9 +17,7 @@ func (dhtNode *DHTNode) makeFolder() {
 	}
 }
 
-
-/* createUploadMsg Adds the file to the nodes folder as the name of the node 
-and the filename */
+/* createUploadMsg Adds the file to the nodes folder as the name of the node and the filename */
 func (dhtNode *DHTNode) addFile(msg *Msg) {
 	
 	path := "dataFolder/" + dhtNode.nodeId + "/" 
@@ -32,7 +26,8 @@ func (dhtNode *DHTNode) addFile(msg *Msg) {
 	FileData, _ := b64.StdEncoding.DecodeString(msg.Data)
 
 	hash := generateNodeId(string(FileName))
-	
+
+	/* If this node is not responsible for the file send it to predecessor */	
 	if dhtNode.responsible(hash) != true{						
 		sFileName := b64.StdEncoding.EncodeToString([]byte(FileName))
 		sFileData := b64.StdEncoding.EncodeToString([]byte(FileData))
@@ -40,7 +35,7 @@ func (dhtNode *DHTNode) addFile(msg *Msg) {
 		go func () {dhtNode.transport.send(msg)}() 
 
 	} else {
-	/* If folder don't exist create one*/
+	/* If folder don't exist create one */
 	if !Exists(path) {
 		os.MkdirAll(path, 0777)
 	}
@@ -59,7 +54,7 @@ func (dhtNode *DHTNode) addFile(msg *Msg) {
 	}
 }
 	
-/* createCheckSuccDataMsg */
+/* createCheckSuccDataMsg A newly alive node calls this function in it's new successor and tells it to send back the files it has backed up. If the node has a file send it back and delete it, then tell it's successor to delete the file in it's backupfolder */ 
 func (dhtNode *DHTNode) getSuccData(msg *Msg) {
 
 	path := "dataFolder/" + dhtNode.nodeId + "/" 
@@ -71,6 +66,8 @@ func (dhtNode *DHTNode) getSuccData(msg *Msg) {
 			panic(err)
 		}
 		for _, f := range files {
+			/* .DS_Store is a file Mac OSX auto-creates an should not be sent back. 
+			We check if that file exists and if so deletes it before we can do anything with it*/
 			if f.Name() == ".DS_Store" {
 				os.Remove(path + f.Name())
 			} else {
@@ -85,43 +82,42 @@ func (dhtNode *DHTNode) getSuccData(msg *Msg) {
 						hash := generateNodeId(f.Name())
 						
 						if !(between([]byte(msg.LightNode[1]),[]byte(dhtNode.nodeId), []byte(hash))){
-						
 							sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
 							sFileData := b64.StdEncoding.EncodeToString([]byte(file))
+
+							/* Sends back file to predecessor */
 							msg := createUploadMsg(dhtNode.transport.bindAddress, msg.LightNode[0], sFileName, sFileData)
 							go func () {dhtNode.transport.send(msg)}() 
 
+							/* Deletes file in successors backupfolder */
+							NewMsg := createDeleteFileMsg("deleteFileSucc", dhtNode.transport.bindAddress, dhtNode.successor[0], sFileName)
+							go func () { dhtNode.transport.send(NewMsg)}()
+
+							/* Deletes file in nodes folder */
 							os.Remove(path + f.Name())
+
 						} else {
 							fmt.Println("Node " + msg.Dst + " with nodeId " + dhtNode.nodeId + " responsebility for " + f.Name() + "\n")
 						}
 					} 
+				} else {
+					fmt.Println(path + " is empty" + "\n")
 				}
-			}
-			emptyer, error := IsEmptyDir(path)
-			if error != nil {
-				panic(err)
-			}
-			if emptyer {
-				sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
-				NewMsg := createDeleteFileMsg("deleteFileSucc", dhtNode.transport.bindAddress, dhtNode.successor[0], sFileName)
-				go func () { dhtNode.transport.send(NewMsg)}()
-			} else {
-				fmt.Println(path + " is not empty" + "\n")
 			}	
 		} 	
 	}
 }
 
+/* Called from replicate. Goes in to the new folder and deletes the file in "/" named the same as in the backupfolder of the predecessor */
 func (dhtNode *DHTNode) checkfolder(nodeId string) {
-path := "dataFolder/" + dhtNode.nodeId + "/"  + nodeId + "/" 
-path2 := "dataFolder/" + dhtNode.nodeId + "/"
+	path := "dataFolder/" + dhtNode.nodeId + "/"  + nodeId + "/" 
+	path2 := "dataFolder/" + dhtNode.nodeId + "/"
 	
-if Exists(path) {
-	dir, err := ioutil.ReadDir(path)
-	if err != nil {
-		panic(err)
-	}
+	if Exists(path) {
+		dir, err := ioutil.ReadDir(path)
+		if err != nil {
+			panic(err)
+		}
 		for _, f := range dir {
 			if f.Name() == ".DS_Store" {
 				os.Remove(path + f.Name())
@@ -132,8 +128,7 @@ if Exists(path) {
 						if !f.IsDir() && f3.Name() == f2.Name(){
 						fmt.Println("Remove file: "+ f3.Name() +" in "+ path2 + "\n" )
 						os.Remove(path2 + f2.Name())
-					}
-
+						}
 					}
 				}
 			}
@@ -141,12 +136,12 @@ if Exists(path) {
 	}
 }
 
+/* When a node gets a new successor. Replicate files to that node */
 func (dhtNode *DHTNode) checkIfReplicate() {
 	path := "dataFolder/" + dhtNode.nodeId + "/" 
 	
 	if Exists(path) {
 		files, err := ioutil.ReadDir(path)
-
 		if err != nil {
 			panic(err)
 		}
@@ -167,21 +162,21 @@ func (dhtNode *DHTNode) checkIfReplicate() {
 		}
 	}
 }
-
-/* Creates a new file named dhtNode.nodeId in folder "path" */
+	
+/* Creates a new file in folder "path" */
 func createfile(path string, fileData string) {
 	err := ioutil.WriteFile(path, []byte(fileData), 0777)
 	check(err)
 }
 
-/*  */
+/* Just a check function */
 func check(err error) {
 	if err != nil {
 		panic(err)
 	}
 }
 
-/* createReplicateMsg Replicates the file to the nodes succesor */
+/* createReplicateMsg Adds the file from the nodes Predecessor. The node saves the file in a folder named as it's predecessor */
 func (dhtNode *DHTNode) replicate(msg *Msg) {
 
 	nodeId := generateNodeId(msg.Origin)
@@ -198,8 +193,7 @@ func (dhtNode *DHTNode) replicate(msg *Msg) {
 
 	path2 := "dataFolder/" + dhtNode.nodeId + "/" + nodeId + "/" + string(FileName)
 	
-	/* If file already exist, remove it and create it again 
-	else, just create it */
+	/* If file already exist, remove it and create it again else, just create it */
 	if _, err := os.Stat(path2); err == nil {
 		os.Remove(path2)
 		createfile(path2, string(FileData))
@@ -210,10 +204,7 @@ func (dhtNode *DHTNode) replicate(msg *Msg) {
 	dhtNode.checkfolder(nodeId)
 }
 
-
-/* If a node notice a predesessor is offline, it will take over 
-responsebility for that file and move the file from it's backup 
-folder to "/" */
+/* If a node notice a predesessor is offline, it will take over responsebility for that file and move the file from it's backup folder to "/" in it's own filestructure */
 func (dhtNode *DHTNode) takeResponsibility() {
 
 	path := "dataFolder/" + dhtNode.nodeId + "/" + dhtNode.predecessor[1] + "/"
@@ -221,7 +212,7 @@ func (dhtNode *DHTNode) takeResponsibility() {
 
 	/* If folder exist*/
 	if Exists(path) {
-		fmt.Println("Takes responsebility of file in: " + path)
+		fmt.Println("Takes responsebility of file in: " + path + "\n")
 		files, err := ioutil.ReadDir(path)
 
 		if err != nil {
@@ -262,41 +253,20 @@ func (dhtNode *DHTNode) takeResponsibility() {
 	} 
 }
 
-func (dhtNode *DHTNode) deleteFile(msg *Msg) {
-	path := "dataFolder/" + dhtNode.nodeId + "/" 
-	FileName, _ := b64.StdEncoding.DecodeString(msg.FileName)
-	/* If folder exist, remove every file in folder that's not named
-	as the predesessors nodeId */
-	if _, err := os.Stat(path); err == nil {
-		files, error := ioutil.ReadDir(path)
-		if error != nil {
-			panic(error)
-		}
-		for _, f := range files {
-			if f.Name() == string(FileName) {
-				fmt.Println("Deleting file: " + path + f.Name() + "\n")
-				os.Remove(path + f.Name())
-				sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
-				NewMsg := createDeleteFileMsg("deleteFileSucc", dhtNode.transport.bindAddress, dhtNode.successor[0], sFileName)
-				go func () { dhtNode.transport.send(NewMsg)}()
-			}
-		}
-	}
-}
-
+/* Removes the folder with the "dirName" in a specific path */
 func (dhtNode *DHTNode) removefolder(path string, dirName string) {
-
 	fmt.Println(dhtNode.nodeId + " removes folder: " + dirName + " in path: " + path + "\n")
 
 	os.RemoveAll(path + dirName)
 }
 
-/* createSuccFileDeleteMsg */
+/* createDeleteFileMsg When a predecessor deletes a file update the backupfolder by removing that file also */
 func (dhtNode *DHTNode) deleteFileSucc(msg *Msg) {
-
 	FileName, _ := b64.StdEncoding.DecodeString(msg.FileName)
 
-	path := "dataFolder/" + dhtNode.nodeId + "/" + dhtNode.predecessor[1] + "/" 
+	pre_noid := generateNodeId(msg.Origin)
+
+	path := "dataFolder/" + dhtNode.nodeId + "/" + pre_noid + "/" 
 
 	if Exists(path) {
 		os.Remove(path + string(FileName))
@@ -313,10 +283,8 @@ func (dhtNode *DHTNode) deleteFileSucc(msg *Msg) {
 	}	
 }
 
-/* If backupfolderNode dies and gets back alive. It's successor deletes the 
-folder named as it pre predecessor */
+/* If backupfolderNode dies and gets back alive. It's successor deletes the folder named as it predecessor <-> predecessor */
 func (dhtNode *DHTNode) deleteBackupSucc(msg *Msg) {
-
 	path := "dataFolder/" + dhtNode.nodeId + "/" 
 
 	if Exists(path) {
@@ -335,6 +303,7 @@ func (dhtNode *DHTNode) deleteBackupSucc(msg *Msg) {
 	}	
 }
 
+/* Checks if the folder is empty */
 func IsEmptyDir(name string) (bool, error) {
 	entries, err := ioutil.ReadDir(name)
 	if err != nil {
@@ -343,7 +312,7 @@ func IsEmptyDir(name string) (bool, error) {
 	return len(entries) == 0, nil
 }
 	
-// Do the file exist?
+/* Do the file exist? Returns true or false */
 func Exists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
 		if os.IsNotExist(err) {
@@ -353,7 +322,7 @@ func Exists(name string) bool {
 	return true
 }
 
-/* Sends back the node that should be responsible for the file */
+/* Sends the file to the node that should be responsible */
 func (dhtNode *DHTNode) responsibleForFile(filename, data string) {
 	FileName, _ := b64.StdEncoding.DecodeString(filename)
 	
@@ -365,19 +334,40 @@ func (dhtNode *DHTNode) responsibleForFile(filename, data string) {
 	
 	waitResponse := time.NewTimer(time.Millisecond * 2000)
 
-		for {
-				select {
-				case s := <-dhtNode.fingerMemory:
-					fmt.Println(" <<<<<<<<<<<<<<<<<<<<<< First time uploading file to: " + s.ip + " <<<<<<<<<<<<<<<<<<<<<< ")
-
-					msg := createUploadMsg(dhtNode.transport.bindAddress, s.ip, filename, data)
-					go func () {dhtNode.transport.send(msg)}() 
-					return
+	for {
+		select {
+			case s := <-dhtNode.fingerMemory:
+				fmt.Println(" <<<<<<<<<<<<<<<<<<<<<< First time uploading file to: " + s.ip + " <<<<<<<<<<<<<<<<<<<<<< ")
+				
+				msg := createUploadMsg(dhtNode.transport.bindAddress, s.ip, filename, data)
+				go func () {dhtNode.transport.send(msg)}() 
+				return
 					
-				case <-waitResponse.C:
-					return
-				}
+			case <-waitResponse.C:
+				return
+		}
+	}
+}
+
+/* If folder exist, remove file in folder that's named as the filename sent by successor, then delete it in nodes successors backup folder */
+func (dhtNode *DHTNode) deleteFile(msg *Msg) {
+	path := "dataFolder/" + dhtNode.nodeId + "/" 
+	FileName, _ := b64.StdEncoding.DecodeString(msg.FileName)
+	if _, err := os.Stat(path); err == nil {
+		files, error := ioutil.ReadDir(path)
+		if error != nil {
+			panic(error)
+		}
+		for _, f := range files {
+			if f.Name() == string(FileName) {
+				fmt.Println("Deleting file: " + path + f.Name() + "\n")
+				os.Remove(path + f.Name())
+				sFileName := b64.StdEncoding.EncodeToString([]byte(f.Name()))
+				NewMsg := createDeleteFileMsg("deleteFileSucc", dhtNode.transport.bindAddress, dhtNode.successor[0], sFileName)
+				go func () { dhtNode.transport.send(NewMsg)}()
 			}
+		}
+	}
 }
 
 /* Gets all files stored on nodes */
@@ -393,8 +383,6 @@ func (dhtNode *DHTNode) getFiles(msg *Msg) {
 		if d == true {
 			m := createFileResponseMsg(dhtNode.transport.bindAddress, msg.Origin, "DONE", "DONE")
 			go dhtNode.transport.send(m)
-			//m := createAckMsg("ack", dhtNode.transport.bindAddress, msg.Origin)
-			//go dhtNode.transport.send(m)
 		}
 	}
 }
@@ -417,22 +405,22 @@ func (dhtNode *DHTNode) goThroughDir(msg *Msg) bool {
 
 /* Checks who's responsible for the file that is going to be updated */
 func (dhtNode *DHTNode) startUpdateFile(filename, data string) {
-    hash := generateNodeId(filename)
-    dhtNode.lookup(hash)
-    waitResponse := time.NewTimer(time.Millisecond*1000)
-        for {
-            select {
-                case n := <- dhtNode.fingerMemory:
-                    sFileName := b64.StdEncoding.EncodeToString([]byte(filename))
-					sFileData := b64.StdEncoding.EncodeToString([]byte(data))
-                    msg := createUpdateFileMsg("updateFile", dhtNode.transport.bindAddress, n.ip, sFileName, sFileData)  
-                    go func () { dhtNode.transport.send(msg)}()
-                    return
-                case  <- waitResponse.C:
-                    fmt.Println("^^^^^^^^^^^^^^^^^^^ UPDATE TIMEOUT ^^^^^^^^^^^^^^")
-                    return
-            }
+	hash := generateNodeId(filename)
+	dhtNode.lookup(hash)
+	waitResponse := time.NewTimer(time.Millisecond*1000)
+    for {
+        select {
+            case n := <- dhtNode.fingerMemory:
+                sFileName := b64.StdEncoding.EncodeToString([]byte(filename))
+				sFileData := b64.StdEncoding.EncodeToString([]byte(data))
+                msg := createUpdateFileMsg("updateFile", dhtNode.transport.bindAddress, n.ip, sFileName, sFileData)  
+                go func () { dhtNode.transport.send(msg)}()
+                return
+            case  <- waitResponse.C:
+                fmt.Println("^^^^^^^^^^^^^^^^^^^ UPDATE TIMEOUT ^^^^^^^^^^^^^^^^^^^")
+                return
         }
+    }
 }
 
 /* Update content in file */

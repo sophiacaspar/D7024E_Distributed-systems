@@ -8,12 +8,6 @@ type Finger_table struct {
 
 }
 
-/**
-type Finger struct {
-	id 		string
-}
-*/
-
 func init_finger_table(node *DHTNode) [size]*DHTNode {
 	var fingerTable [size]*DHTNode
 	for i:=0; i < size; i++ {

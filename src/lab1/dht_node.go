@@ -35,23 +35,19 @@ func makeDHTNode(nodeId *string, ip string, port string) *DHTNode {
 	dhtNode.predecessor = nil
 
 	dhtNode.finger_table = &Finger_table{}
-	//dhtNode.finger_table.fingers = nil
 
 	return dhtNode
 }
-
 
 func (dhtNode *DHTNode) findPredecessor(node *DHTNode) *DHTNode{
         succsNode := dhtNode
         return succsNode
 }
 
-
 func (dhtNode *DHTNode) findSuccessor(node *DHTNode) *DHTNode{
 	predNode := dhtNode.findPredecessor(node)
 	return predNode.successor
 }
-
 
 // JOIN
 func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
@@ -76,19 +72,14 @@ func (dhtNode *DHTNode) addToRing(newDHTNode *DHTNode) {
 		newDHTNode.stabilize()
 		newDHTNode.finger_table.fingers = init_finger_table(newDHTNode)
 		dhtNode.update_fingers()
-		
-		
-		//fmt.Print(dhtNode.nodeId)
-		//fmt.Println(dhtNode.finger_table.fingers)
-		
+			
 	} else {
 		n.addToRing(newDHTNode)
 	}
 
 }
 
-
-// periodically verify nodes immediate successor and tell the successor about node
+/* Periodically verify nodes immediate successor and tell the successor about node */
 func (dhtNode *DHTNode) stabilize(){
 	n := dhtNode.successor.predecessor
 	if (between([]byte(dhtNode.nodeId), []byte(dhtNode.successor.nodeId), []byte(n.nodeId))){
@@ -114,24 +105,16 @@ func (dhtNode *DHTNode) lookup(key string) *DHTNode {
 }
 
 func (dhtNode *DHTNode) acceleratedLookupUsingFingers(key string) *DHTNode {
+	fingerTable := dhtNode.finger_table.fingers
 
-		fingerTable := dhtNode.finger_table.fingers
-
-		for i := len(fingerTable); i > 0; i-- {
-			fmt.Println(i)
-			fmt.Println("Checks if ", key, " is between ", dhtNode.nodeId, " and ", fingerTable[(i-1)].nodeId)
-			if !(between([]byte(dhtNode.nodeId), []byte(fingerTable[(i-1)].nodeId), []byte(key))){
-				return fingerTable[(i-1)].acceleratedLookupUsingFingers(key)
-			} 
-		}
-		return dhtNode.successor
-		}
-
-
-
-func (dhtNode *DHTNode) responsible(key string) bool {
-	// TODO
-	return false
+	for i := len(fingerTable); i > 0; i-- {
+		fmt.Println(i)
+		fmt.Println("Checks if ", key, " is between ", dhtNode.nodeId, " and ", fingerTable[(i-1)].nodeId)
+		if !(between([]byte(dhtNode.nodeId), []byte(fingerTable[(i-1)].nodeId), []byte(key))){
+			return fingerTable[(i-1)].acceleratedLookupUsingFingers(key)
+		} 
+	}
+	return dhtNode.successor
 }
 
 func (dhtNode *DHTNode) printRing() {
@@ -157,16 +140,4 @@ func (dhtNode *DHTNode) printFingers() {
 		for _, f := range dhtNode.finger_table.fingers {
 			fmt.Print(f.nodeId, " ")
 		}
-}
-
-
-func (dhtNode *DHTNode) testCalcFingers(m int, bits int) {
-	idBytes, _ := hex.DecodeString(dhtNode.nodeId)
-	fingerHex, _ := calcFinger(idBytes, m, bits)
-	fingerSuccessor := dhtNode.lookup(fingerHex)
-	fingerSuccessorBytes, _ := hex.DecodeString(fingerSuccessor.nodeId)
-	fmt.Println("successor    " + fingerSuccessor.nodeId)
-
-	dist := distance(idBytes, fingerSuccessorBytes, bits)
-	fmt.Println("distance     " + dist.String())
 }

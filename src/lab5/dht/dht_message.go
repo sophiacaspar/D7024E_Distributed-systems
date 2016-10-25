@@ -219,7 +219,7 @@ func createUploadMsg(origin, dst, filename string, data string) *Msg{
  	return Msg
  }
 
-func createDeletBackupeMsg(origin, dst, filename string) *Msg{
+func createDeleteBackupeMsg(origin, dst, filename string) *Msg{
  	Msg := &Msg{}
  	Msg.Type = "delBackup"
  	Msg.Origin = origin
@@ -282,4 +282,3 @@ func createUpdateFileMsg(t, origin, dst, filename, data string) *Msg{
  	Msg.Data = data
  	return Msg
  }
-
