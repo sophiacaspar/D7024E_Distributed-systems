@@ -5,7 +5,6 @@ import (
 	"html/template"
     "encoding/json"
     "time"
-	//"io/ioutil"
 	"net/http"
 	"github.com/httprouter-master" //https://github.com/julienschmidt/httprouter
 	"bufio"
@@ -21,7 +20,6 @@ type Page struct {
 type File struct {
 	Filename	string `json="filename"`
     Data        string `json="data"`
-
 }
 
 type FileList struct {
@@ -72,18 +70,15 @@ func loadWebsite(filename string) string{
 *** different commands (get, post etc) ***
 *****************************************/
 func (dhtNode *DHTNode) startWebserver() {
-        router := httprouter.New()
-        router.GET("/", dhtNode.IndexHandler)
-        router.GET("/storage", dhtNode.GetHandler)
-        router.POST("/storage", dhtNode.PostHandler)
-        router.PUT("/storage/:KEY", dhtNode.PutHandler)
-        router.DELETE("/storage/:KEY", dhtNode.DeleteHandler)
+    router := httprouter.New()
+    router.GET("/", dhtNode.IndexHandler)
+    router.GET("/storage", dhtNode.GetHandler)
+    router.POST("/storage", dhtNode.PostHandler)
+    router.PUT("/storage/:KEY", dhtNode.PutHandler)
+    router.DELETE("/storage/:KEY", dhtNode.DeleteHandler)
 
-        log.Fatal(http.ListenAndServe(dhtNode.contact.ip+":"+dhtNode.contact.port, router))
-
+    log.Fatal(http.ListenAndServe(dhtNode.contact.ip+":"+dhtNode.contact.port, router))
 }
-
-
 
 /*****************************************
 *** Gets all files in chord network    ***
@@ -174,19 +169,16 @@ func (dhtNode *DHTNode) DeleteHandler(w http.ResponseWriter, r *http.Request, ps
     hash := generateNodeId(ps.ByName("KEY"))
     dhtNode.lookup(hash)
     waitResponse := time.NewTimer(time.Millisecond*1000)
-        for {
-            select {
-                case n := <- dhtNode.fingerMemory:
-                    sFileName := b64.StdEncoding.EncodeToString([]byte(ps.ByName("KEY")))
-                    msg := createDeleteFileMsg("deleteFile", dhtNode.transport.bindAddress, n.ip, sFileName)  
-                    go func () { dhtNode.transport.send(msg)}()
-                    return
-                case  <- waitResponse.C:
-                    fmt.Println("^^^^^^^^^^^^^^^^^^^DELETE TIMEOUT ^^^^^^^^^^^^^^")
-                    return
-            }
+    for {
+        select {
+            case n := <- dhtNode.fingerMemory:
+                sFileName := b64.StdEncoding.EncodeToString([]byte(ps.ByName("KEY")))
+                msg := createDeleteFileMsg("deleteFile", dhtNode.transport.bindAddress, n.ip, sFileName)  
+                go func () { dhtNode.transport.send(msg)}()
+                return
+            case  <- waitResponse.C:
+                fmt.Println("^^^^^^^^^^^^^^^^^^^DELETE TIMEOUT ^^^^^^^^^^^^^^")
+                return
         }
-
-
-    //golangfunc.deletedataonfile(ps.ByName("KEY"))
+    }
 }

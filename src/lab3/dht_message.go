@@ -179,7 +179,6 @@ func createHeartbeatAnswer(origin, dst string) *Msg{
 	return Msg
 }
 
-
 func createUploadMsg(origin, dst, filename string, data string) *Msg{
 	Msg := &Msg{}
 	Msg.Type = "uploadData"
@@ -232,7 +231,7 @@ func createUploadMsg(origin, dst, filename string, data string) *Msg{
  	return Msg
  }
 
- func createDeletBackupeMsg(origin, dst, filename string) *Msg{
+ func createDeleteBackupeMsg(origin, dst, filename string) *Msg{
  	Msg := &Msg{}
  	Msg.Type = "delBackup"
  	Msg.Origin = origin

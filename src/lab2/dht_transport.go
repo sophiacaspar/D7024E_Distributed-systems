@@ -34,7 +34,6 @@ func (transport *Transport) listen() {
 } 
 
 func (transport *Transport) init_msgQueue() {
-	
 	go func() {
 		for {
 			select {
@@ -42,7 +41,6 @@ func (transport *Transport) init_msgQueue() {
 					switch m.Type {
 						case "addToRing":
 							transport.dhtNode.createTask("addToRing", m)
-							//transport.dhtNode.addToRing(m)
 						case "updatePred":
 							transport.dhtNode.setPredecessor(m)
 						case "updateSucc":
@@ -81,7 +79,6 @@ func (transport *Transport) send(msg *Msg) {
 		fmt.Println(err)
 	}
 	defer conn.Close()
-
 
 	_, err = conn.Write(bytes)
 }

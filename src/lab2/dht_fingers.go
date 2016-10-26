@@ -1,4 +1,3 @@
-
 package dht
 
 import (
@@ -7,7 +6,11 @@ import (
 	"fmt"
 	)
 
-const size int = 160
+/* Runs in 160 bits 
+const size int = 160 */
+
+/* Runs in 3 bits */
+const size int = 3 
 
 type FingerTable struct {
 	fingers 	[size]*Finger
@@ -19,9 +22,9 @@ type Finger struct {
 }
 
 func (dhtNode *DHTNode) setStaticFinger(msg *Msg) {
-		for i:=0; i < size; i++ {
-			dhtNode.fingers.fingers[i] = &Finger{msg.LightNode[0], msg.LightNode[1]}
-		}
+	for i:=0; i < size; i++ {
+		dhtNode.fingers.fingers[i] = &Finger{msg.LightNode[0], msg.LightNode[1]}
+	}
 }
 
 func (dhtNode *DHTNode) updateFingers() {
@@ -31,7 +34,6 @@ func (dhtNode *DHTNode) updateFingers() {
 		response := false
 		idBytes, _ := hex.DecodeString(dhtNode.nodeId)
 		fingerHex, _ := calcFinger(idBytes, (i+1), size)
-		//fmt.Println(dhtNode.nodeId, " fingerhex is ", fingerHex)
 
 		if fingerHex == " " {
 			fingerHex = "00"	
@@ -44,7 +46,6 @@ func (dhtNode *DHTNode) updateFingers() {
 			for response != true{
 				select {
 					case r := <- dhtNode.responseQueue:
-						//fmt.Println(r.LightNode, "was responsible for ", fingerHex)
 						newFinger := &Finger{r.LightNode[0], r.LightNode[1]}
 						dhtNode.fingers.fingers[i] = newFinger
 						response = true
@@ -57,7 +58,6 @@ func (dhtNode *DHTNode) updateFingers() {
 			}
 		}
 	}
-
 }
 
 func (dhtNode *DHTNode) fingerTimer() {
@@ -66,7 +66,6 @@ func (dhtNode *DHTNode) fingerTimer() {
 		dhtNode.createTask("updateFingers", nil)
 	}	
 }
-
 
 func (dhtNode *DHTNode) printRingFingers(msg *Msg) {
 	if msg.Origin != msg.Dst {
@@ -80,12 +79,10 @@ func (dhtNode *DHTNode) printRingFingers(msg *Msg) {
 		dhtNode.printFingers()
 		fmt.Println("]")
 	}
-
 }
 
 func (dhtNode *DHTNode) printFingers() {
-		for _, f := range dhtNode.fingers.fingers {
-			fmt.Print(f.id, " ")
-		}
+	for _, f := range dhtNode.fingers.fingers {
+		fmt.Print(f.id, " ")
+	}
 }
-

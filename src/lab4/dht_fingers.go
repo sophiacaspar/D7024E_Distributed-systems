@@ -1,4 +1,3 @@
-
 package dht
 
 import (
@@ -19,47 +18,42 @@ type Finger struct {
 }
 
 func (dhtNode *DHTNode) initFingerTable(msg *Msg) {
-		for i:=0; i < size; i++ {
-			dhtNode.fingers.fingers[i] = &Finger{msg.LightNode[0], msg.LightNode[1]}
-		}
+	for i:=0; i < size; i++ {
+		dhtNode.fingers.fingers[i] = &Finger{msg.LightNode[0], msg.LightNode[1]}
+	}
 }
 
 func (dhtNode *DHTNode) updateFingers() {
 	if dhtNode.successor[0] != "" {
 	nodeAddress := dhtNode.contact.ip + ":" + dhtNode.contact.port
 	var response = false
-	for i := 0; i < size; i++ {
-		if dhtNode.fingers.fingers[i] != nil {
-			idBytes, _ := hex.DecodeString(dhtNode.nodeId)
-			fingerHex, _ := calcFinger(idBytes, (i + 1), size)
-			
-			if fingerHex == " " {
-				fingerHex = "00"
-			}
-			go dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0]))
-
-			waitResponse := time.NewTimer(time.Millisecond * 2000)
-			for response != true {
-				select {
-				case s := <-dhtNode.fingerMemory:
-					dhtNode.fingers.fingers[i] = s
-					//fmt.Println(dhtNode.contact.port, "added finger", (i+1), s.ip, "figerhex", fingerHex)
-					response = true
-				case <-waitResponse.C:
-					fmt.Println("finger timeout,", dhtNode.contact.port,"is searching for ",fingerHex)
-					response = true
-				//default:
-				//	fmt.Println("when you try your best but don't succeed")
+		for i := 0; i < size; i++ {
+			if dhtNode.fingers.fingers[i] != nil {
+				idBytes, _ := hex.DecodeString(dhtNode.nodeId)
+				fingerHex, _ := calcFinger(idBytes, (i + 1), size)
+				
+				if fingerHex == " " {
+					fingerHex = "00"
 				}
-			}
+				go dhtNode.transport.send(createLookupMsg("lookup", nodeAddress, fingerHex, nodeAddress, dhtNode.successor[0]))
 
-			response = false
+				waitResponse := time.NewTimer(time.Millisecond * 2000)
+				for response != true {
+					select {
+					case s := <-dhtNode.fingerMemory:
+						dhtNode.fingers.fingers[i] = s
+						response = true
+					case <-waitResponse.C:
+						fmt.Println("finger timeout,", dhtNode.contact.port,"is searching for ",fingerHex)
+						response = true
+
+					}
+				}
+				response = false
+			}
 		}
 	}
-	}
-
 }
-
 
 func (dhtNode *DHTNode) fingerTimer() {
 	for {
@@ -71,7 +65,6 @@ func (dhtNode *DHTNode) fingerTimer() {
 		}
 	}	
 }
-
 
 /*********************************************
 **** PRINTS FINGERS WITH DIFFERENT OUTPUTS ***
@@ -88,7 +81,6 @@ func (dhtNode *DHTNode) printRingFingers(msg *Msg) {
 		dhtNode.printFingers()
 		fmt.Println("]")
 	}
-
 }
 
 func (dhtNode *DHTNode) printFingers() {
