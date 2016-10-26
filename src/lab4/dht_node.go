@@ -319,7 +319,7 @@ func (dhtNode *DHTNode) lookupNext(msg *Msg) {
     	m = createLookupMsg("lookup", msg.Origin, msg.Key, nodeAddress, dhtNode.successor[0])
 		go dhtNode.transport.send(m)
 
-    	waitResponse.Reset(time.Millisecond * 300)
+    	waitResponse.Reset(time.Millisecond * 1000)
     	for {
 			select {
 				case <-dhtNode.lookupQueue:
